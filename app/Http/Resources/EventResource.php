@@ -12,6 +12,7 @@ class EventResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'title' => $this->title,
             'location' => new LocationResource($this->location),
             'preset' => new PresetResource($this->preset),
             'start_time' => $this->start_time,

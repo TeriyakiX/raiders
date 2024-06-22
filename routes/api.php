@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CharacterController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\Game\GeneralSettingsController;
@@ -48,4 +49,10 @@ Route::prefix('dao/admin/game')->group(function () {
     Route::post('events', [EventsController::class, 'store']);
     Route::get('events/{id}', [EventsController::class, 'show']);
     Route::put('events/{id}', [EventsController::class, 'update']);
+
+    // User routes
+    Route::get('/user/inventory', [CharacterController::class, 'getInventory']);
+    Route::get('/user/inventories', [CharacterController::class, 'getInventories']);
+    Route::get('/user/character/{tokenId}', [CharacterController::class, 'getCharacter']);
+    Route::get('/user/village/{tokenId}', [CharacterController::class, 'getVillage']);
 });
