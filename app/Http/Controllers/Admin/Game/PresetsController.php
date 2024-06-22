@@ -69,8 +69,20 @@ class PresetsController extends Controller
     public function update(PresetRequest $request, $id)
     {
         $preset = Preset::findOrFail($id);
-        $preset->update($request->validated());
-        return new PresetResource($preset);
+
+        $preset->update([
+            'title' => $request->title,
+            'description' => $request->description,
+            'picture' => $request->picture,
+        ]);
+
+        if ($request->has('parameters')) {
+            $preset->parameters()->sync($request->parameters);
+        }
+
+        $preset->load('parameters');
+
+        return response()->json(['message' => 'Preset updated successfully', 'data' => $preset], 200);
     }
 
     public function destroy($id)
