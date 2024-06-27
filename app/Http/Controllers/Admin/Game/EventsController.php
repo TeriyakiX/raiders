@@ -8,12 +8,13 @@ use App\Http\Resources\EventResource;
 use App\Models\Event;
 use App\Models\Filter;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 
 class EventsController extends Controller
 {
     public function index()
     {
-        return EventResource::collection(Event::with('filters')->get());
+        return Event::select('id', 'title', 'start_time', 'end_time')->get();
     }
 
     public function show($id)
@@ -32,7 +33,10 @@ class EventsController extends Controller
     public function update(EventRequest $request, $id)
     {
         $event = Event::findOrFail($id);
-        $event->update($request->validated());
+
+        $validated = $request->validated();
+
+        $event->update($validated);
         $this->syncFilters($event, $request->filters);
 
         return new EventResource($event->load('filters'));

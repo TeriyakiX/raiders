@@ -15,15 +15,16 @@ class EventRequest extends FormRequest
     {
         return [
             'title' => 'required|string|max:255',
+            'description' => 'nullable|string|max:1000',
             'location_id' => 'required|exists:locations,id',
             'preset_id' => 'required|exists:presets,id',
-            'date_start' => 'required|date',
-            'date_finish' => 'required|date|after:start_time',
+            'start_time' => 'required|date_format:Y-m-d\TH:i:sP',
+            'end_time' => 'required|date_format:Y-m-d\TH:i:sP',
             'prize' => 'required|array',
-            'filter' => 'nullable|array',
-            'filter.*.type' => 'required_with:filters|string',
-            'filter.*.value' => 'required_with:filters|string',
-            'filter_description' => 'nullable|string|max:1000',
+            'filter' => 'required|array',
+            'filters' => 'required|array',
+            'filters.*.type' => 'required|string',
+            'filters.*.value' => 'required|string',
         ];
     }
 }

@@ -13,15 +13,15 @@ class EventResource extends JsonResource
         return [
             'id' => $this->id,
             'title' => $this->title,
-            'location' => new LocationResource($this->location),
-            'preset' => new PresetResource($this->preset),
+            'description' => $this->description,
             'start_time' => $this->start_time,
             'end_time' => $this->end_time,
-            'prizes' => $this->prizes,
-            'filters' => FilterResource::collection($this->filters),
-            'filter_description' => $this->filter_description,
+            'prize' => $this->prize,
+            'filter' => $this->filter,
+            'filters' => FilterResource::collection($this->whenLoaded('filters')),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];
     }
+
 }
