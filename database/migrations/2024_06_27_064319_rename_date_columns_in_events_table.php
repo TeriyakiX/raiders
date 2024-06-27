@@ -12,8 +12,8 @@ return new class extends Migration
     public function up()
     {
         Schema::table('events', function (Blueprint $table) {
-            $table->dateTime('start_time')->after('date_start')->nullable();
-            $table->dateTime('end_time')->after('date_finish')->nullable();
+            $table->renameColumn('date_start', 'start_time');
+            $table->renameColumn('date_finish', 'end_time');
         });
     }
 
