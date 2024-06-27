@@ -12,16 +12,16 @@ return new class extends Migration
     public function up()
     {
         Schema::table('events', function (Blueprint $table) {
-            $table->renameColumn('date_start', 'start_time');
-            $table->renameColumn('date_finish', 'end_time');
+            $table->dateTime('start_time')->after('date_start')->nullable();
+            $table->dateTime('end_time')->after('date_finish')->nullable();
         });
     }
 
     public function down()
     {
         Schema::table('events', function (Blueprint $table) {
-            $table->renameColumn('start_time', 'date_start');
-            $table->renameColumn('end_time', 'date_finish');
+            $table->dropColumn('date_start');
+            $table->dropColumn('date_finish');
         });
     }
 };
