@@ -9,6 +9,7 @@ use App\Models\Event;
 use App\Models\Filter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class EventsController extends Controller
 {
@@ -35,6 +36,8 @@ class EventsController extends Controller
         $event = Event::findOrFail($id);
 
         $validated = $request->validated();
+
+        Log::info('Validated data:', $validated); // Логируем валидированные данные
 
         $event->update($validated);
         $this->syncFilters($event, $request->filters);

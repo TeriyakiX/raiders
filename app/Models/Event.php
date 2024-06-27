@@ -14,8 +14,8 @@ class Event extends Model
         'preset_id',
         'title',
         'description',
-        'date_start',
-        'date_finish',
+        'start_time',
+        'end_time',
         'prize',
         'filter',
     ];
