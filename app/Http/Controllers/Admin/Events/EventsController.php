@@ -1,26 +1,33 @@
 <?php
 
-namespace App\Http\Controllers\Admin\Game;
+namespace App\Http\Controllers\Admin\Events;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\EventRequest;
 use App\Http\Resources\EventResource;
 use App\Models\Event;
 use App\Models\Filter;
+use App\Services\AuthService\MetaMaskAuthService;
+use App\Services\EventService\EventService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 
 class EventsController extends Controller
 {
+
+    protected $eventService;
+    protected $metaMaskAuthService;
+
+    public function __construct(EventService $eventService, MetaMaskAuthService $metaMaskAuthService,)
+    {
+        $this->eventService = $eventService;
+        $this->metaMaskAuthService = $metaMaskAuthService;
+    }
     public function index()
     {
         return Event::select('id', 'title', 'start_time', 'end_time')->get();
-    }
-
-    public function show($id)
-    {
-        return new EventResource(Event::with('filters')->findOrFail($id));
     }
 
     public function store(EventRequest $request)
@@ -67,4 +74,12 @@ class EventsController extends Controller
 
         return response()->json(['message' => 'Event deleted successfully']);
     }
+
+    public function show($id)
+    {
+        // Загрузка события вместе с пользователями
+        $event = Event::with('users')->findOrFail($id);
+        return new EventResource($event);
+    }
+
 }

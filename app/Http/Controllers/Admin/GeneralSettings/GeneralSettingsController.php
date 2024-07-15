@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Admin\Game;
+namespace App\Http\Controllers\Admin\GeneralSettings;
 
 use App\Http\Controllers\Controller;
 use App\Models\LeagueSetting;

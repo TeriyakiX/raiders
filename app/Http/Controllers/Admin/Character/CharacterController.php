@@ -1,9 +1,10 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Admin\Character;
 
+use App\Http\Controllers\Controller;
 use App\Models\Character;
-use Illuminate\Http\Request;
+use App\Models\User;
 
 class CharacterController extends Controller
 {

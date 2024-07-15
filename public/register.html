@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RGW Register</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.13.1/ethers.umd.min.js" integrity="sha512-UvwB92yhzWWQstXZT31l1Fc7wv3sRG7uWBSFZ6TeJ0LIfBe8oM9p2oufp1Y5nuBAso+FYHR03WocHr5+wqWJ7A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+</head>
+<body>
+    <label>Not logged in</label>
+    <script>
+
+        class SignatureRequired extends Error {
+            constructor(message) {
+                super(message)
+            }
+        }
+
+        const baseUrl = "https://rgw.zone/api"
+
+        const api = {
+            auth: {
+                register: (from, signature) => {
+                    return fetch(`${baseUrl}/auth/register?from=${from}`, {
+                        method: "POST",
+                        body: JSON.stringify({
+                            signature,
+                            ref: null
+                        }),
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        credentials: 'include'
+                    }).then(res => res.json()).then((data) => {
+                        if (data.statusCode == 401) {
+                            throw new SignatureRequired(data.message)
+                        }
+                        return data
+                    })
+                }
+            }
+        }
+
+        async function signIn(signer, message) {
+            try {
+
+                if (message) {
+                    message = await signer.signMessage(message)
+                }
+                alert(message)
+
+                return await api.auth.register(signer.address, message)
+            } catch (ex) {
+                if (ex instanceof SignatureRequired) {
+                    return await signIn(signer, ex.message)
+                }
+                throw ex
+            }
+        }
+
+        async function init() {
+            if (!window.ethereum) {
+                alert('Please install metamask')
+            } else {
+                const provider = new ethers.BrowserProvider(window.ethereum)
+                const signer = await provider.getSigner()
+                const authData = await signIn(signer)
+                document.querySelector('label').innerText = JSON.stringify(authData, null, 4)
+            }
+        }
+
+        init()
+    </script>
+</body>
+</html>

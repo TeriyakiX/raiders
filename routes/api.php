@@ -1,12 +1,14 @@
 <?php
 
-use App\Http\Controllers\CharacterController;
-use Illuminate\Http\Request;
+use App\Http\Controllers\Admin\Character\CharacterController;
+use App\Http\Controllers\Admin\Events\EventsController;
+use App\Http\Controllers\Admin\GeneralSettings\GeneralSettingsController;
+use App\Http\Controllers\Admin\Location\LocationController;
+use App\Http\Controllers\Admin\Presets\PresetsController;
+use \App\Http\Controllers\Auth\MetaMask\MetaMaskController;
+use \App\Http\Controllers\Game\Game\GameController;
+use App\Http\Controllers\User\UserController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Admin\Game\GeneralSettingsController;
-use App\Http\Controllers\Admin\Game\LocationController;
-use App\Http\Controllers\Admin\Game\PresetsController;
-use App\Http\Controllers\Admin\Game\EventsController;
 
 /*
 |--------------------------------------------------------------------------
@@ -49,10 +51,17 @@ Route::prefix('dao/admin/game')->group(function () {
     Route::post('events', [EventsController::class, 'store']);
     Route::get('events/{id}', [EventsController::class, 'show']);
     Route::put('events/{id}', [EventsController::class, 'update']);
+    Route::post('events/{event}/go-to-event', [GameController::class, 'goToEvent']);
 
-    // User routes
     Route::get('/user/inventory', [CharacterController::class, 'getInventory']);
-    Route::get('/user/inventories', [CharacterController::class, 'getInventories']);
     Route::get('/user/character/{tokenId}', [CharacterController::class, 'getCharacter']);
     Route::get('/user/village/{tokenId}', [CharacterController::class, 'getVillage']);
+
 });
+
+    Route::get('/user', [UserController::class, 'getUserData']);
+
+    Route::post('auth/metamask', [MetaMaskController::class, 'loginWithMetaMask']);
+
+    Route::get('/user/inventory', [UserController::class, 'getUserInventory']);
+

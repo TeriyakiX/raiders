@@ -1,13 +1,11 @@
 <?php
 
-namespace App\Http\Controllers\Admin\Game;
+namespace App\Http\Controllers\Admin\Presets;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\PresetRequest;
-use App\Http\Resources\PresetResource;
 use App\Models\Parameter;
 use App\Models\Preset;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class PresetsController extends Controller
