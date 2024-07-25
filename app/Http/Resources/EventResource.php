@@ -33,7 +33,7 @@ class EventResource extends JsonResource
             'updated_at' => $this->updated_at,
             'time_remaining' => $endTime ? $endTime->diffForHumans() : null, // Вызываем diffForHumans() на объекте Carbon
             'locationType' => $this->location ? $this->location->type : null,
-            'players' => UserResource::collection($this->whenLoaded('users')), // Выводим коллекцию пользователей через UserResource
+            'users' => UserResource::collection($this->whenLoaded('users')),
         ];
     }
 

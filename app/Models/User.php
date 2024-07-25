@@ -19,9 +19,18 @@ class User extends Authenticatable
      * @var array<int, string>
      */
     protected $fillable = [
+        'external_id',
         'name',
+        'role',
+        'display_role',
+        'clan',
+        'avatar',
         'email',
-        'password',
+        'verified',
+        'agreement',
+        'address',
+        'league_id',
+        'league_points',
     ];
 
     /**
@@ -49,4 +58,22 @@ class User extends Authenticatable
     {
         return $this->belongsToMany(Event::class, 'event_user')->withTimestamps();
     }
+
+    public function cards()
+    {
+        return $this->hasMany(Card::class, 'owner', 'address');
+    }
+
+    public function squads()
+    {
+        return $this->hasMany(Squad::class);
+    }
+
+    public function league()
+    {
+        return $this->belongsTo(League::class, 'league_id');
+    }
+
+
+
 }

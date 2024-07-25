@@ -10,16 +10,13 @@ class UserResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'external_id' => $this->external_id,
+            'address' => $this->address,
             'name' => $this->name,
-            'email' => $this->email,
-            'role' => $this->role,
-            'displayRole' => $this->display_role,
-            'clan' => $this->clan,
-            'avatar' => $this->avatar,
-            'referrals' => $this->referrals,
-            'totalInvitation' => $this->total_invitation,
-            'verified' => $this->verified,
-            'agreement' => $this->agreement,
+            'league' => new LeagueResource($this->whenLoaded('league')),
+            'league_points' => $this->league_points, // Очки лиги пользователя
+
         ];
     }
 }
+

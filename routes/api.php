@@ -1,13 +1,17 @@
 <?php
 
-use App\Http\Controllers\Admin\Character\CharacterController;
-use App\Http\Controllers\Admin\Events\EventsController;
-use App\Http\Controllers\Admin\GeneralSettings\GeneralSettingsController;
-use App\Http\Controllers\Admin\Location\LocationController;
-use App\Http\Controllers\Admin\Presets\PresetsController;
-use \App\Http\Controllers\Auth\MetaMask\MetaMaskController;
-use \App\Http\Controllers\Game\Game\GameController;
-use App\Http\Controllers\User\UserController;
+use App\Http\Controllers\Admin\CharacterController;
+use App\Http\Controllers\Admin\EventsController;
+use App\Http\Controllers\Admin\GeneralSettingsController;
+use App\Http\Controllers\Admin\LocationController;
+use App\Http\Controllers\Admin\PresetsController;
+use App\Http\Controllers\Auth\MetaMaskController;
+use App\Http\Controllers\BattleController;
+use App\Http\Controllers\CardController;
+use App\Http\Controllers\Game\GameController;
+use App\Http\Controllers\InventoryController;
+use App\Http\Controllers\LeagueController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -57,11 +61,38 @@ Route::prefix('dao/admin/game')->group(function () {
     Route::get('/user/character/{tokenId}', [CharacterController::class, 'getCharacter']);
     Route::get('/user/village/{tokenId}', [CharacterController::class, 'getVillage']);
 
+    Route::get('/cards/{id}', [CardController::class, 'show']);
+    Route::post('/squad/add/{cardId}', [CardController::class, 'addToSquad']);
+    Route::delete('/squad/remove/{cardId}', [CardController::class, 'removeFromSquad']);
+    Route::get('/events/users/{event}', [GameController::class, 'showEventPage']);
+    Route::get('/squad/search', [GameController::class, 'viewAvailableCards']);
+
+
+
+    Route::apiResource('leagues', LeagueController::class);
+
+
+    // Начало боя
+    Route::post('/battles', [BattleController::class, 'startBattle']);
+    Route::get('/battles/{battle_id}', [BattleController::class, 'getBattleStatus']);
+    Route::post('/battles/{battle_id}/perform', [BattleController::class, 'performBattle']);
+    Route::get('/battles/{battle_id}/logs', [BattleController::class, 'getBattleLogs']);
+
+    // Замораживание карты
+    Route::post('/cards/{card_id}/freeze', [CardController::class, 'freezeCard']);
+
+    // Разморозка карты
+    Route::post('/cards/{card_id}/unfreeze', [CardController::class, 'unfreezeCard']);
+
+    // Обновление очков лиги пользователя
+    Route::patch('/users/{user_id}/update_league_points', [UserController::class, 'updateLeaguePoints']);
 });
 
     Route::get('/user', [UserController::class, 'getUserData']);
 
     Route::post('auth/metamask', [MetaMaskController::class, 'loginWithMetaMask']);
 
-    Route::get('/user/inventory', [UserController::class, 'getUserInventory']);
+    Route::get('/user/inventory', [InventoryController::class, 'getUserInventory']);
+
+
 
