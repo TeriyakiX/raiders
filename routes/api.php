@@ -6,9 +6,10 @@ use App\Http\Controllers\Admin\GeneralSettingsController;
 use App\Http\Controllers\Admin\LocationController;
 use App\Http\Controllers\Admin\PresetsController;
 use App\Http\Controllers\Auth\MetaMaskController;
-use App\Http\Controllers\BattleController;
 use App\Http\Controllers\CardController;
+use App\Http\Controllers\Game\BattleController;
 use App\Http\Controllers\Game\GameController;
+use App\Http\Controllers\ImportController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\LeagueController;
 use App\Http\Controllers\UserController;
@@ -75,7 +76,7 @@ Route::prefix('dao/admin/game')->group(function () {
     // Начало боя
     Route::post('/battles', [BattleController::class, 'startBattle']);
     Route::get('/battles/{battle_id}', [BattleController::class, 'getBattleStatus']);
-    Route::post('/battles/{battle_id}/perform', [BattleController::class, 'performBattle']);
+    Route::post('/battles/perform/{battle_id}', [BattleController::class, 'completeBattle']);
     Route::get('/battles/{battle_id}/logs', [BattleController::class, 'getBattleLogs']);
 
     // Замораживание карты
@@ -93,6 +94,8 @@ Route::prefix('dao/admin/game')->group(function () {
     Route::post('auth/metamask', [MetaMaskController::class, 'loginWithMetaMask']);
 
     Route::get('/user/inventory', [InventoryController::class, 'getUserInventory']);
+
+
 
 
 

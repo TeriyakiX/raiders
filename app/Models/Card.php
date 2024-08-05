@@ -17,6 +17,8 @@ class Card extends Model
         'metadata',
     ];
 
+
+
     protected $casts = [
         'metadata' => 'array',
     ];

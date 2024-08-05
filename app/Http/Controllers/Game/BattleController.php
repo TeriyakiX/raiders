@@ -1,13 +1,11 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Game;
 
+use App\Http\Controllers\Controller;
+use App\Http\Resources\CardResource\CardResourceShow;
 use App\Models\Battle;
-use App\Models\BattleParticipant;
-use App\Models\Card;
-use App\Models\Faction;
-use App\Models\FactionLandInteraction;
-use App\Models\Land;
+use App\Models\Squad;
 use App\Models\User;
 use App\Services\BattleService;
 use App\Services\UserService;
@@ -80,70 +78,33 @@ class BattleController extends Controller
         }
     }
 
+    public function completeBattle(Request $request, $battle_id)
+    {
+        try {
+            $this->battleService->performBattle($battle_id);
+            return response()->json(['message' => 'Battle completed successfully.']);
+        } catch (\Exception $e) {
+            Log::error("Failed to complete battle: " . $e->getMessage(), [
+                'battle_id' => $battle_id,
+            ]);
+            return response()->json(['message' => 'Failed to complete battle.'], 500);
+        }
+    }
+
     public function getBattleStatus($battle_id)
     {
         try {
-            $battle = Battle::find($battle_id);
-
-            if (!$battle) {
-                return response()->json(['message' => 'Battle not found'], 404);
-            }
-
-            return response()->json($this->battleService->getBattleStatus($battle));
+            $battleStatus = $this->battleService->getBattleStatus($battle_id);
+            return response()->json($battleStatus);
         } catch (\Exception $e) {
-            Log::error("Failed to get battle status: " . $e->getMessage(), [
-                'exception' => $e,
-                'battle_id' => $battle_id,
-            ]);
-            return response()->json(['message' => 'Failed to get battle status.'], 500);
+            return response()->json(['message' => 'Failed to fetch battle status.'], 500);
         }
     }
 
-    public function performBattle(Request $request, $battle_id)
+    public function getBattleLogs($battleId)
     {
-        try {
-            $battle = Battle::find($battle_id);
+        $battleLog = $this->battleService->generateBattleLog($battleId);
 
-            if (!$battle) {
-                return response()->json(['message' => 'Battle not found'], 404);
-            }
-
-            $actions = $request->input('actions', []);
-
-            // Вызов сервиса выполнения боя
-            $result = $this->battleService->performBattle($battle, $actions);
-
-            return response()->json([
-                'message' => 'Battle performed successfully',
-                'results' => $result['results'],
-                'final_status' => $result['final_status']
-            ]);
-        } catch (\Exception $e) {
-            Log::error("Failed to perform battle: " . $e->getMessage(), [
-                'exception' => $e,
-                'battle_id' => $battle_id,
-                'actions' => $request->input('actions')
-            ]);
-            return response()->json(['message' => 'Failed to perform battle.'], 500);
-        }
-    }
-
-    public function getBattleLogs($battle_id)
-    {
-        try {
-            $battle = Battle::find($battle_id);
-
-            if (!$battle) {
-                return response()->json(['message' => 'Battle not found'], 404);
-            }
-
-            return response()->json($this->battleService->getBattleLogs($battle));
-        } catch (\Exception $e) {
-            Log::error("Failed to get battle logs: " . $e->getMessage(), [
-                'exception' => $e,
-                'battle_id' => $battle_id,
-            ]);
-            return response()->json(['message' => 'Failed to get battle logs.'], 500);
-        }
+        return response()->json($battleLog);
     }
 }
