@@ -13,13 +13,10 @@ use Illuminate\Support\Facades\Log;
 
 class EventsController extends Controller
 {
-
-    protected $eventService;
     protected $metaMaskAuthService;
 
-    public function __construct(EventService $eventService, MetaMaskAuthService $metaMaskAuthService,)
+    public function __construct(MetaMaskAuthService $metaMaskAuthService,)
     {
-        $this->eventService = $eventService;
         $this->metaMaskAuthService = $metaMaskAuthService;
     }
     public function index()
