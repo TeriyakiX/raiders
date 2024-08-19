@@ -29,7 +29,6 @@ return new class extends Migration
             $table->json('referrals')->nullable();
             $table->integer('total_invitation')->default(0);
             $table->boolean('verified')->default(false);
-            $table->boolean('agreement')->default(false);
 
             $table->timestamps();
         });

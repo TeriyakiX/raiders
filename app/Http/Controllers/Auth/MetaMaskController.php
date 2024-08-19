@@ -63,7 +63,6 @@ class MetaMaskController extends Controller
                 'avatar' => $userData['avatar'],
                 'email' => $userData['email'],
                 'verified' => $userData['verified'],
-                'agreement' => $userData['agreement'],
                 'address' => $userData['address'] ?? $from, // Используем address из ответа, если он есть, иначе from
             ]
         );
