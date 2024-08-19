@@ -54,7 +54,7 @@ class MetaMaskController extends Controller
 
         // Создаем или обновляем пользователя в базе данных
         $user = \App\Models\User::updateOrCreate(
-            ['external_id' => $userData['id']],
+            ['address' => strtolower($from)], // Поиск по адресу (регистр приравнен к нижнему регистру)
             [
                 'name' => $userData['name'],
                 'role' => $userData['role'],
@@ -63,7 +63,7 @@ class MetaMaskController extends Controller
                 'avatar' => $userData['avatar'],
                 'email' => $userData['email'],
                 'verified' => $userData['verified'],
-                'address' => $userData['address'] ?? $from, // Используем address из ответа, если он есть, иначе from
+                'external_id' => $userData['id'], // Обновляем external_id
             ]
         );
 
