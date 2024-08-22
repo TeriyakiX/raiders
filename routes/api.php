@@ -9,7 +9,6 @@ use App\Http\Controllers\Auth\MetaMaskController;
 use App\Http\Controllers\CardController;
 use App\Http\Controllers\Game\BattleController;
 use App\Http\Controllers\Game\GameController;
-use App\Http\Controllers\ImportController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\LeagueController;
 use App\Http\Controllers\UserController;
