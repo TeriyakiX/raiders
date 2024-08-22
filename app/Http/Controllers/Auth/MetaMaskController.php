@@ -33,7 +33,7 @@ class MetaMaskController extends Controller
         }
 
         // Извлечение данных из запроса
-        $from = $request->input('from');
+        $from = strtolower($request->input('from')); // Приводим к нижнему регистру
         $signature = $request->input('signature');
 
         // Получаем токен доступа
@@ -52,10 +52,16 @@ class MetaMaskController extends Controller
 
         $userData = $userDataResponse['data'];
 
-        // Создаем или обновляем пользователя в базе данных
-        $user = \App\Models\User::updateOrCreate(
-            ['address' => strtolower($from)], // Поиск по адресу (регистр приравнен к нижнему регистру)
-            [
+        // Проверяем, существует ли пользователь с данным адресом
+        $user = \App\Models\User::where('address', $from)->first();
+
+        if ($user) {
+            // Если пользователь существует, обновляем только external_id
+            $user->external_id = $userData['id'];
+            $user->save();
+        } else {
+            // Если пользователя нет, создаем его
+            $user = \App\Models\User::create([
                 'name' => $userData['name'],
                 'role' => $userData['role'],
                 'display_role' => $userData['displayRole'],
@@ -63,9 +69,10 @@ class MetaMaskController extends Controller
                 'avatar' => $userData['avatar'],
                 'email' => $userData['email'],
                 'verified' => $userData['verified'],
-                'external_id' => $userData['id'], // Обновляем external_id
-            ]
-        );
+                'address' => $from, // Сохраняем адрес
+                'external_id' => $userData['id'], // Сохраняем external_id
+            ]);
+        }
 
         // Логирование полученного токена для проверки
         Log::info("Access Token to be set: " . $accessToken);
