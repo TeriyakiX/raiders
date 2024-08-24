@@ -79,7 +79,7 @@ class MetaMaskController extends Controller
 
         // Устанавливаем куку 'access_token' в ответе
         $response = response()->json(['statusCode' => 200, 'data' => ['address' => $from]]);
-        $response->cookie('access_token', $accessToken, 60, '/', null, true, true); // HttpOnly и Secure
+        $response->cookie('access_token', $accessToken, 60, '/', null, false, true); // HttpOnly, без Secure
 
         return $response;
     }
