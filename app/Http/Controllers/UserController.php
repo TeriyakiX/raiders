@@ -22,7 +22,7 @@ class UserController extends Controller
         $accessToken = $request->cookie('access_token');
 
         if (!$accessToken) {
-            return response()->json(['message' => 'Unauthorized'], 401);
+            return response()->json(['message' => 'токена нема'], 401);
         }
 
         // Вызываем метод getUserData из UserService для выполнения запроса к API
