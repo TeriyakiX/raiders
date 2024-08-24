@@ -20,7 +20,8 @@ class UserController extends Controller
     {
         $accessToken = $request->cookie('access_token');
 
-        Log::info('Access Token:', ['token' => $accessToken]); // Логирование токена
+        Log::info('Request Headers: ', ['headers' => $request->headers->all()]);
+        Log::info('Access Token from Cookie: ', ['access_token' => $accessToken]);
 
         if (!$accessToken) {
             return response()->json(['message' => 'токена нема'], 401);
