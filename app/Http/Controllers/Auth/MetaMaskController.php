@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Services\MetaMaskAuthService;
 use App\Services\UserService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
@@ -79,7 +80,7 @@ class MetaMaskController extends Controller
 
         // Устанавливаем куку 'access_token' в ответе
         $response = response()->json(['statusCode' => 200, 'data' => ['address' => $from]]);
-        $response->cookie('access_token', $accessToken, 60, '/', null, false, true)->withSameSite('Lax');
+        $cookie = Cookie::make('access_token', $accessToken, 60, '/', null, false, true, false, 'Lax');
 
         return $response;
     }
