@@ -7,7 +7,6 @@ use App\Http\Requests\EventRequest;
 use App\Http\Resources\EventResource;
 use App\Models\Event;
 use App\Models\Filter;
-use App\Services\EventService;
 use App\Services\MetaMaskAuthService;
 use Illuminate\Support\Facades\Log;
 

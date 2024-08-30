@@ -59,7 +59,6 @@ class MetaMaskAuthService
         }
     }
 
-// Метод для извлечения значения токена из заголовка куки
     protected function extractAccessTokenFromCookieHeader(string $cookieHeader): ?string
     {
         // Пример извлечения значения токена из заголовка Set-Cookie
