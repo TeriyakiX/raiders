@@ -87,8 +87,8 @@ class MetaMaskController extends Controller
             null,             // Домен
             true,             // Secure (для HTTPS)
             false,            // HttpOnly
-            false,            // Zashifrovannaya
-            'None'            // SameSite
+            false,
+            'None'
         );
 
         return $response;
