@@ -85,9 +85,10 @@ class MetaMaskController extends Controller
             60,               // Время жизни куки в минутах
             '/',              // Путь
             null,             // Домен
-            false,             // Secure (для HTTPS)
-            true,            // HttpOnly
-            false,
+            true,             // Secure (для HTTPS)
+            false,            // HttpOnly
+            false,            // Zashifrovannaya
+            'None'            // SameSite
         );
 
         return $response;
