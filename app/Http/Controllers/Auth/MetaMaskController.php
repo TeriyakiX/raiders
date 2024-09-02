@@ -86,7 +86,7 @@ class MetaMaskController extends Controller
             '/',              // Путь
             null,             // Домен
             false,             // Secure (для HTTPS)
-            false,            // HttpOnly
+            true,            // HttpOnly
             false,            // Zashifrovannaya
             'None'            // SameSite
         );
