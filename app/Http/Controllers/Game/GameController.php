@@ -120,9 +120,10 @@ class GameController extends Controller
                 return response()->json(['message' => 'User address not found'], 400);
             }
 
-            // Получаем карточки в отряде пользователя
-            $squadCards = Squad::where('user_id', $user->id)->get();
-            $squadCardIds = $squadCards->pluck('card_id');
+            // Получаем карточки в отряде пользователя, связанные с данным event_id
+            $squadCards = Squad::where('user_id', $user->id)
+                ->where('event_id', $event->id)  // Фильтрация по event_id
+                ->get();
 
             // Получаем всех пользователей, участвующих в событии
             $eventUsers = $event->users()->with('league')->get(); // Загружаем связанную лигу
@@ -176,16 +177,31 @@ class GameController extends Controller
             // Получаем все карточки пользователя
             $allUserCards = Card::where('owner', $user->address)->get();
 
-            // Получаем карточки в отряде пользователя
-            $squadCardIds = Squad::where('user_id', $user->id)->pluck('card_id');
-            Log::info("Squad card IDs: ", $squadCardIds->toArray());
+            // Получаем event_id из запроса
+            $eventId = $request->input('event_id');
+
+            // Проверяем, что событие существует
+            if ($eventId) {
+                $event = Event::find($eventId);
+                if (!$event) {
+                    return response()->json(['error' => 'Event not found'], 404);
+                }
+            }
+
+            // Получаем карточки в отряде пользователя для указанного события
+            $squadQuery = Squad::where('user_id', $user->id);
+            if ($eventId) {
+                $squadQuery->where('event_id', $eventId);
+            }
+            $squadCardIds = $squadQuery->pluck('card_id');
+            Log::info("Squad card IDs for event ID {$eventId}: ", $squadCardIds->toArray());
 
             // Определяем, нужно ли показывать полные данные
             $showInfo = filter_var($request->input('show_info', false), FILTER_VALIDATE_BOOLEAN);
 
             // Форматируем карточки
-            $formattedAvailableCards = $allUserCards->map(function($card) use ($squadCardIds, $showInfo) {
-                $isInSquad = $squadCardIds->contains($card->id); // Убедитесь, что здесь используется правильное поле для проверки
+            $formattedAvailableCards = $allUserCards->map(function ($card) use ($squadCardIds, $showInfo) {
+                $isInSquad = $squadCardIds->contains($card->id);
 
                 $cardData = $card->toArray();
                 $cardData['in_squad'] = $isInSquad;

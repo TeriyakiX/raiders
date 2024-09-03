@@ -12,6 +12,8 @@ class Squad extends Model
     protected $fillable = [
         'card_id',
         'user_id',
+        'event_id',
+
     ];
 
     // Определяем связи с другими моделями

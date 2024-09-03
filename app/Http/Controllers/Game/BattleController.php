@@ -50,6 +50,13 @@ class BattleController extends Controller
                 return response()->json(['message' => 'User not found'], 404);
             }
 
+            // Получаем event_id из запроса
+            $eventId = $request->input('event_id');
+
+            if (!$eventId) {
+                return response()->json(['message' => 'Event ID is required'], 400);
+            }
+
             // Получаем ID защищающегося
             $defenderId = $request->input('defender_id');
 
@@ -64,8 +71,24 @@ class BattleController extends Controller
                 return response()->json(['message' => 'Defender not found'], 404);
             }
 
+            // Проверка количества карточек в отряде атакующего для текущего event_id
+            $attackerSquadCardsCount = Squad::where('user_id', $attacker->id)
+                ->where('event_id', $eventId)
+                ->count();
+            if ($attackerSquadCardsCount < 3) {
+                return response()->json(['message' => 'You need at least 3 cards in your squad for this event to start a battle'], 400);
+            }
+
+            // Проверка количества карточек в отряде защищающегося для текущего event_id
+            $defenderSquadCardsCount = Squad::where('user_id', $defender->id)
+                ->where('event_id', $eventId)
+                ->count();
+            if ($defenderSquadCardsCount < 3) {
+                return response()->json(['message' => 'The defender needs at least 3 cards in their squad for this event to start a battle'], 400);
+            }
+
             // Создание боя
-            $battle = $this->battleService->startBattle($attacker->id, $defender->id);
+            $battle = $this->battleService->startBattle($attacker->id, $defender->id, $eventId);
 
             return response()->json(['message' => 'Battle started successfully', 'battle_id' => $battle->id]);
         } catch (\Exception $e) {
@@ -73,6 +96,7 @@ class BattleController extends Controller
                 'exception' => $e,
                 'attacker_id' => $attacker->id ?? 'N/A',
                 'defender_id' => $defenderId ?? 'N/A',
+                'event_id' => $eventId ?? 'N/A',
             ]);
             return response()->json(['message' => 'Failed to start battle.'], 500);
         }

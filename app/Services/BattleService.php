@@ -42,7 +42,7 @@ class BattleService
         $this->cardService = $cardService;
     }
 
-    public function startBattle($attacker_id, $defender_id)
+    public function startBattle($attacker_id, $defender_id, $event_id = null)
     {
         try {
             // Проверка существования пользователей
@@ -53,20 +53,27 @@ class BattleService
                 throw new \Exception("Attacker or Defender not found");
             }
 
-            // Создание записи о бое
-            return Battle::create([
+            // Создание записи о бое с учетом event_id
+            $battle = Battle::create([
                 'attacker_id' => $attacker_id,
                 'defender_id' => $defender_id,
                 'attacker_initial_cups' => $attacker->league_points,
                 'defender_initial_cups' => $defender->league_points,
-                'status' => 'in_progress', // Убедитесь, что это одно из допустимых значений
+                'event_id' => $event_id, // Привязываем event_id к бою
+                'status' => 'in_progress',
             ]);
+
+            return $battle; // Вернуть объект боя вместо JSON
         } catch (\Exception $e) {
             Log::error("Failed to start battle: " . $e->getMessage(), [
                 'attacker_id' => $attacker_id,
                 'defender_id' => $defender_id,
+                'event_id' => $event_id
             ]);
-            throw $e; // Или вернуть ошибку для обработчика
+            return response()->json([
+                'message' => 'Failed to start battle.',
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
 
@@ -361,15 +368,25 @@ class BattleService
             // Получение информации о бое
             $battle = Battle::findOrFail($battle_id);
 
-            // Получение отрядов для атакующего и защищающегося
+            // Получение event_id из боя
+            $eventId = $battle->event_id;
+
+            // Проверка на случай, если event_id отсутствует или не задан
+            if (!$eventId) {
+                throw new \Exception("Event ID is missing in battle.");
+            }
+
+            // Получение отрядов для атакующего и защищающегося, относящихся к этому событию
             $attackerSquad = Squad::where('user_id', $battle->attacker_id)
+                ->where('event_id', $eventId)
                 ->with('card')
                 ->get();
             $defenderSquad = Squad::where('user_id', $battle->defender_id)
+                ->where('event_id', $eventId)
                 ->with('card')
                 ->get();
 
-            // Преобразование карточек в нужный формат
+            // Преобразование карточек в нужный формат с использованием ресурса
             $attackerCards = $attackerSquad->map(function ($squad) {
                 return new CardResourceShow($squad->card);
             });
@@ -385,14 +402,18 @@ class BattleService
                 'defender_squad' => $defenderCards->toArray(),
             ];
 
-            return $response;
+            return response()->json($response);
 
         } catch (\Exception $e) {
             Log::error("Failed to fetch battle status: " . $e->getMessage(), [
                 'battle_id' => $battle_id,
             ]);
-            throw $e;
+            return response()->json([
+                'message' => 'Failed to fetch battle status.',
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
+
 
 }

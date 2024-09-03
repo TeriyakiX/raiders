@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Resources\EventResource;
 use App\Models\Card;
+use App\Models\CharacterParameters;
 use App\Models\Event;
 use App\Models\Squad;
 use App\Models\User;
@@ -33,7 +34,7 @@ class CardController extends Controller
     }
 
     // Метод для добавления карточки в отряд
-    public function addToSquad(Request $request, $cardId)
+    public function addToSquad(Request $request, $cardIdentifier)
     {
         try {
             // Получаем access_token из куки
@@ -60,11 +61,11 @@ class CardController extends Controller
                 return response()->json(['message' => 'User not found'], 404);
             }
 
-            // Найти карточку по card_id
-            $card = Card::where('card_id', $cardId)->first();
+            // Найти карточку по id
+            $card = Card::find($cardIdentifier);
 
             if (!$card) {
-                Log::error('Card not found for cardId:', ['cardId' => $cardId]);
+                Log::error('Card not found for cardId:', ['cardId' => $cardIdentifier]);
                 return response()->json(['error' => 'Card not found'], 404);
             }
 
@@ -81,19 +82,42 @@ class CardController extends Controller
                 return response()->json(['error' => 'Card does not belong to the user'], 403);
             }
 
-            // Проверить, существует ли уже запись об этой карточке в отряде для данного пользователя
+            // Проверяем наличие параметров персонажа для карточки
+            try {
+                $characterId = $this->getCardId($card); // Получаем ID персонажа из карточки
+                $characterParams = CharacterParameters::where('character_id', $characterId)->first();
+
+                if (!$characterParams) {
+                    Log::error('Character parameters not found for card:', ['cardId' => $cardIdentifier, 'characterId' => $characterId]);
+                    return response()->json(['error' => 'Character parameters not found for this card'], 400);
+                }
+            } catch (\Exception $e) {
+                Log::error('Error retrieving character parameters:', ['error' => $e->getMessage()]);
+                return response()->json(['error' => 'Invalid card data or character parameters not found'], 400);
+            }
+
+            // Получаем event_id из запроса
+            $eventId = $request->input('event_id');
+
+            if (!$eventId) {
+                return response()->json(['message' => 'Event ID is required'], 400);
+            }
+
+            // Проверяем, существует ли уже запись об этой карточке в отряде для данного пользователя на этот event_id
             $existingSquad = Squad::where('card_id', $card->id)
                 ->where('user_id', $user->id)
+                ->where('event_id', $eventId)
                 ->first();
 
             if ($existingSquad) {
-                return response()->json(['error' => 'Card already in squad'], 400);
+                return response()->json(['error' => 'Card already in squad for this event'], 400);
             }
 
-            // Логика добавления карточки в отряд
+            // Логика добавления карточки в отряд с event_id
             $squad = Squad::create([
                 'card_id' => $card->id,
                 'user_id' => $user->id,
+                'event_id' => $eventId, // Сохраняем event_id
             ]);
 
             return response()->json(['message' => 'Card added to squad', 'squad' => $squad]);
@@ -102,6 +126,70 @@ class CardController extends Controller
             return response()->json(['message' => 'Failed to process the request: ' . $e->getMessage()], 500);
         }
     }
+
+    protected function getCharacterParameters($card)
+    {
+        $characterId = $this->getCardId($card);
+        if (empty($characterId)) {
+            throw new \Exception("ID не найден в карточке.");
+        }
+        return CharacterParameters::where('character_id', $characterId)->firstOrFail();
+    }
+
+    public function getCardId($cardObject)
+    {
+        // Проверяем тип данных и преобразуем в объект, если это массив
+        if (is_array($cardObject)) {
+            $cardObject = (object) $cardObject;
+        } elseif (is_string($cardObject)) {
+            $cardObject = json_decode($cardObject);
+
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                throw new \Exception("Ошибка декодирования JSON: " . json_last_error_msg());
+            }
+        } elseif (!is_object($cardObject)) {
+            throw new \Exception("Неподдерживаемый тип данных");
+        }
+        $metadata = $cardObject->metadata ?? null;
+        if ($metadata) {
+            if (is_array($metadata)) {
+                $metadata = (object) $metadata;
+            }
+
+            if (isset($metadata->attributes) && is_array($metadata->attributes)) {
+                $id = null;
+                foreach ($metadata->attributes as $attribute) {
+                    // Преобразуем каждый атрибут в объект, если это массив
+                    if (is_array($attribute)) {
+                        $attribute = (object) $attribute;
+                    }
+                    if (isset($attribute->trait_type) && $attribute->trait_type === 'ID') {
+                        $id = $attribute->value;
+                        Log::info('Найден ID:', ['id' => $id]);
+                        break;
+                    }
+                }
+
+                if ($id === null) {
+                    Log::error('Не удалось найти ID карты в метаданных', ['cardObject' => $cardObject]);
+                } else {
+                    Log::info('Найден ID карты', ['ID' => $id]);
+                }
+            } else {
+                Log::error('Атрибуты карты отсутствуют в метаданных', ['cardObject' => $cardObject]);
+            }
+        } else {
+            Log::error('Метаданные карты отсутствуют', ['cardObject' => $cardObject]);
+        }
+
+        if ($id === null) {
+            throw new \Exception("Не удалось найти ID карты в метаданных");
+        }
+
+        return $id;
+    }
+
+
 
     public function removeFromSquad(Request $request, $cardId)
     {
@@ -131,7 +219,7 @@ class CardController extends Controller
             }
 
             // Найти отряд, в котором находится карточка
-            $squad = Squad::where('card_id', $cardId)
+            $squad = Squad::where('id', $cardId)
                 ->where('user_id', $user->id)
                 ->first();
 
