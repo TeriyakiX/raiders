@@ -177,8 +177,8 @@ class GameController extends Controller
             // Получаем все карточки пользователя
             $allUserCards = Card::where('owner', $user->address)->get();
 
-            // Получаем event_id из запроса
-            $eventId = $request->input('event_id');
+            // Получаем event_id из строки запроса (query string)
+            $eventId = $request->query('event_id');
 
             // Проверяем, что событие существует
             if ($eventId) {
@@ -197,7 +197,7 @@ class GameController extends Controller
             Log::info("Squad card IDs for event ID {$eventId}: ", $squadCardIds->toArray());
 
             // Определяем, нужно ли показывать полные данные
-            $showInfo = filter_var($request->input('show_info', false), FILTER_VALIDATE_BOOLEAN);
+            $showInfo = filter_var($request->query('show_info', false), FILTER_VALIDATE_BOOLEAN);
 
             // Форматируем карточки
             $formattedAvailableCards = $allUserCards->map(function ($card) use ($squadCardIds, $showInfo) {
@@ -220,7 +220,6 @@ class GameController extends Controller
             return response()->json(['error' => 'Failed to retrieve available cards'], 500);
         }
     }
-
 
     protected function fetchAndSaveUserCards($accessToken)
     {
