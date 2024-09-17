@@ -21,6 +21,7 @@ return [
         'http://localhost:3000',
         'https://raiders-dev.netlify.app',
         'https://raiedersapi.ru',
+        'https://raiders-front.ru'
     ],
     'allowed_origins_patterns' => [],
     'allowed_headers' => ['*'],
