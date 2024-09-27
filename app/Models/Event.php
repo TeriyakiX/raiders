@@ -14,31 +14,27 @@ class Event extends Model
         'preset_id',
         'title',
         'description',
-        'start_time',
-        'end_time',
+        'date_start',
+        'date_finish',
         'prize',
-        'filter',
+        'rarity',
+        'gender',
+        'faction_id',
+        'class',
 
     ];
 
     protected $casts = [
         'prize' => 'array',
-        'filter' => 'array',
     ];
 
     public function location()
     {
         return $this->belongsTo(Location::class);
     }
-
     public function preset()
     {
         return $this->belongsTo(Preset::class);
-    }
-
-    public function filters()
-    {
-        return $this->belongsToMany(Filter::class, 'event_filters');
     }
 
     public function users()

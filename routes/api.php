@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\CharacterController;
 use App\Http\Controllers\Admin\EventsController;
+use App\Http\Controllers\Admin\FactionsController;
 use App\Http\Controllers\Admin\GeneralSettingsController;
 use App\Http\Controllers\Admin\LocationController;
 use App\Http\Controllers\Admin\PresetsController;
@@ -43,12 +44,19 @@ Route::prefix('dao/admin/game')->group(function () {
     Route::delete('locations/{id}', [LocationController::class, 'destroy']);
     Route::put('locations/{id}', [LocationController::class, 'update']);
 
+    // Faction routes
+    Route::get('factions', [FactionsController::class, 'index']); // Получить все фракции
+    Route::get('factions/{id}', [FactionsController::class, 'show']); // Получить фракцию по ID
+    Route::post('factions', [FactionsController::class, 'store']); // Создать новую фракцию
+    Route::put('factions/{id}', [FactionsController::class, 'update']); // Обновить фракцию по ID
+    Route::delete('factions/{id}', [FactionsController::class, 'destroy']); // Удалить фракцию по ID
+
     // Preset routes
     Route::get('presets', [PresetsController::class, 'index']);
     Route::get('presets/{id}', [PresetsController::class, 'show']);
     Route::post('presets', [PresetsController::class, 'store']);
-    Route::delete('presets/{id}', [PresetsController::class, 'destroy']);
     Route::put('presets/{id}', [PresetsController::class, 'update']);
+    Route::delete('presets/{id}', [PresetsController::class, 'destroy']);
 
     // Event routes
     Route::get('events', [EventsController::class, 'index']);

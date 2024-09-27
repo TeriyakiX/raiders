@@ -2,10 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Resources\EventResource;
 use App\Models\Card;
 use App\Models\CharacterParameters;
-use App\Models\Event;
 use App\Models\Squad;
 use App\Models\User;
 use App\Services\CardService;

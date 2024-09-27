@@ -5,7 +5,7 @@ namespace App\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class FilterResource extends JsonResource
+class FactionResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -16,10 +16,8 @@ class FilterResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'rarity' => $this->rarity,
-            'gender' => $this->gender,
-            'faction' => new FactionResource($this->whenLoaded('faction')), // Подгружаем фракцию
-            'class' => $this->class,
+            'name' => $this->name,
+            'description' => $this->description,
         ];
     }
 }

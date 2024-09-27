@@ -3,9 +3,8 @@
 namespace App\Http\Controllers\Game;
 
 use App\Http\Controllers\Controller;
-use App\Http\Resources\CardResource\CardResource;
 use App\Http\Resources\CardResource\CardResourceShow;
-use App\Http\Resources\EventResource;
+use App\Http\Resources\EventResource\EventResource;
 use App\Http\Resources\UserResource;
 use App\Models\Card;
 use App\Models\Event;

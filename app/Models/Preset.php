@@ -10,22 +10,15 @@ class Preset extends Model
     use HasFactory;
 
     protected $fillable = [
-        'title',
-        'parameters',
+        'name',
         'description',
         'picture',
+        'parameter_combination',
     ];
 
-    protected $casts = [
-        'parameters' => 'array',
-    ];
 
     public function events()
     {
         return $this->hasMany(Event::class);
-    }
-    public function parameters()
-    {
-        return $this->belongsToMany(Parameter::class, 'parameter_preset');
     }
 }

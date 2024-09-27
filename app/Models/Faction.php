@@ -15,4 +15,9 @@ class Faction extends Model
     {
         return $this->hasMany(FactionLandInteraction::class);
     }
+
+    public function filters()
+    {
+        return $this->hasMany(Filter::class);
+    }
 }

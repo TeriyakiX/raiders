@@ -22,10 +22,10 @@ class PresetRequest extends FormRequest
     public function rules()
     {
         return [
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string|max:1000',
-            'picture' => 'nullable|string',
-            'parameters' => 'required|array',
+            'name' => 'required|string|max:20', // Название
+            'description' => 'nullable|string|max:1000', // Описание
+            'image' => 'nullable|string|url', // URL на изображение
+            'parameter_combination' => 'required|string', // Комбинация параметров
         ];
     }
 }
