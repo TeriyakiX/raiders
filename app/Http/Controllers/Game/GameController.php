@@ -53,7 +53,6 @@ class GameController extends Controller
             // Проверяем, существует ли пользователь с таким external_id в нашей базе данных
             $user = User::where('external_id', $externalId)->first();
 
-            // Если пользователя нет, возвращаем ошибку
             if (!$user) {
                 return response()->json(['message' => 'User not found'], 404);
             }
@@ -66,19 +65,65 @@ class GameController extends Controller
             // Привязываем пользователя к событию
             $event->users()->attach($user->id);
 
-            // Получаем карточки пользователя
-            $this->fetchAndSaveUserCards($accessToken);
+            // Получаем карточки из тела запроса
+            $cards = $request->input('cards'); // Ожидается, что в запросе будет массив с карточками
 
-            // Загружаем пользователей, связанных с событием
-            $event->load('users');
+            if (!$cards || !is_array($cards)) {
+                return response()->json(['message' => 'No cards provided or invalid format'], 400);
+            }
+
+            // Добавляем карточки в отряд
+            foreach ($cards as $cardIdentifier) {
+                // Проверяем и добавляем карточки в отряд
+                $this->addCardToSquad($user, $event, $cardIdentifier);
+            }
 
             // Возвращаем обновленное событие в виде ресурса
+            $event->load('users');
+
             return new EventResource($event);
 
         } catch (\Exception $e) {
             Log::error("Failed to process the request: " . $e->getMessage());
             return response()->json(['message' => 'Failed to process the request: ' . $e->getMessage()], 500);
         }
+    }
+
+// Метод для добавления карточки в отряд
+    protected function addCardToSquad($user, $event, $cardIdentifier)
+    {
+        // Найти карточку по id
+        $card = Card::find($cardIdentifier);
+
+        if (!$card) {
+            throw new \Exception('Card not found');
+        }
+
+        // Приведение адреса пользователя и владельца карточки к нижнему регистру
+        $userAddress = strtolower($user->address);
+        $cardOwner = strtolower($card->owner);
+
+        // Проверяем, что карточка принадлежит пользователю
+        if ($cardOwner !== $userAddress) {
+            throw new \Exception('Card does not belong to the user');
+        }
+
+        // Проверяем, существует ли уже запись об этой карточке в отряде для данного события
+        $existingSquad = Squad::where('card_id', $card->id)
+            ->where('user_id', $user->id)
+            ->where('event_id', $event->id)
+            ->first();
+
+        if ($existingSquad) {
+            throw new \Exception('Card already in squad for this event');
+        }
+
+        // Добавляем карточку в отряд
+        Squad::create([
+            'card_id' => $card->id,
+            'user_id' => $user->id,
+            'event_id' => $event->id,
+        ]);
     }
 
     public function showEventPage(Request $request, Event $event)
