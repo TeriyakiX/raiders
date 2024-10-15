@@ -13,6 +13,7 @@ use App\Http\Controllers\Game\GameController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\LeagueController;
 use App\Http\Controllers\UserController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -102,7 +103,13 @@ Route::prefix('dao/admin/game')->group(function () {
 
     Route::get('/user/inventory', [InventoryController::class, 'getUserInventory']);
 
-
+    Route::options('{any}', function (Request $request) {
+        return response('', 200)
+            ->header('Access-Control-Allow-Origin', $request->header('Origin'))
+            ->header('Access-Control-Allow-Methods', 'POST, GET, OPTIONS, PUT, DELETE')
+            ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+            ->header('Access-Control-Allow-Credentials', 'true');
+    })->where('any', '.*');
 
 
 
