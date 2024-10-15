@@ -25,7 +25,6 @@ class MetaMaskController extends Controller
 
     public function loginWithMetaMask(Request $request)
     {
-        // Валидация входящих данных
         $validator = Validator::make($request->all(), [
             'from' => 'required|string',
             'signature' => 'required|string',
@@ -35,18 +34,15 @@ class MetaMaskController extends Controller
             return response()->json(['errors' => $validator->errors()], 400);
         }
 
-        // Извлечение данных из запроса
-        $from = strtolower($request->input('from')); // Приводим к нижнему регистру
+        $from = strtolower($request->input('from'));
         $signature = $request->input('signature');
 
-        // Получаем токен доступа через MetaMask
         $accessToken = $this->metaMaskAuthService->loginUser($from, $signature);
 
         if (!$accessToken) {
             return response()->json(['message' => 'User login failed'], 401);
         }
 
-        // Получаем данные пользователя от внешнего сервиса
         $userDataResponse = $this->userService->getUserData($accessToken);
 
         if (isset($userDataResponse['error'])) {
@@ -55,15 +51,12 @@ class MetaMaskController extends Controller
 
         $userData = $userDataResponse['data'];
 
-        // Проверяем, существует ли пользователь с данным адресом
         $user = \App\Models\User::where('address', $from)->first();
 
         if ($user) {
-            // Если пользователь существует, обновляем external_id
             $user->external_id = $userData['id'];
             $user->save();
         } else {
-            // Если пользователя нет, создаем его
             $user = \App\Models\User::create([
                 'name' => $userData['name'],
                 'role' => $userData['role'],
@@ -77,10 +70,8 @@ class MetaMaskController extends Controller
             ]);
         }
 
-        // Проверяем, есть ли карточки у данного пользователя
         $userHasCards = \App\Models\Card::where('owner', $from)->exists();
 
-        // Если карточек нет, загружаем и сохраняем их
         if (!$userHasCards) {
             try {
                 $this->fetchAndSaveUserCards($accessToken);
@@ -92,21 +83,19 @@ class MetaMaskController extends Controller
             Log::info('User cards already exist, skipping fetching cards.');
         }
 
-        // Логирование полученного токена для проверки
         Log::info("Access Token to be set: " . $accessToken);
 
-        // Устанавливаем куку 'access_token' в ответе
         $response = response()->json(['statusCode' => 200, 'data' => ['address' => $from]]);
         $response->cookie(
-            'access_token',   // Название куки
-            $accessToken,     // Значение куки
-            60,               // Время жизни куки в минутах
-            '/',              // Путь
-            null,             // Домен
-            true,             // Secure (для HTTPS)
-            false,            // HttpOnly
-            false,            // Zashifrovannaya
-            'None'            // SameSite
+            'access_token',
+            $accessToken,
+            60,
+            '/',
+            null,
+            true,
+            false,
+            false,
+            'None'
         );
 
         return $response;
@@ -114,7 +103,7 @@ class MetaMaskController extends Controller
 
     protected function fetchAndSaveUserCards($accessToken)
     {
-        // Получаем данные карточек пользователя
+
         $data = $this->nftCardService->getUserInventory($accessToken);
 
         if (isset($data['error'])) {
