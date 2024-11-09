@@ -46,11 +46,11 @@ Route::prefix('dao/admin/game')->group(function () {
     Route::put('locations/{id}', [LocationController::class, 'update']);
 
     // Faction routes
-    Route::get('factions', [FactionsController::class, 'index']); // Получить все фракции
-    Route::get('factions/{id}', [FactionsController::class, 'show']); // Получить фракцию по ID
-    Route::post('factions', [FactionsController::class, 'store']); // Создать новую фракцию
-    Route::put('factions/{id}', [FactionsController::class, 'update']); // Обновить фракцию по ID
-    Route::delete('factions/{id}', [FactionsController::class, 'destroy']); // Удалить фракцию по ID
+    Route::get('factions', [FactionsController::class, 'index']);
+    Route::get('factions/{id}', [FactionsController::class, 'show']);
+    Route::post('factions', [FactionsController::class, 'store']);
+    Route::put('factions/{id}', [FactionsController::class, 'update']);
+    Route::delete('factions/{id}', [FactionsController::class, 'destroy']);
 
     // Preset routes
     Route::get('presets', [PresetsController::class, 'index']);

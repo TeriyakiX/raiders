@@ -64,9 +64,9 @@ class User extends Authenticatable
         return $this->hasMany(Card::class, 'owner', 'address');
     }
 
-    public function squads()
+    public function squad()
     {
-        return $this->hasMany(Squad::class);
+        return $this->hasMany(Squad::class, 'user_id');
     }
 
     public function league()

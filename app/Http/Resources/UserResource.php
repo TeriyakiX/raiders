@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Http\Resources\CardResource\CardResourceShow;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class UserResource extends JsonResource
@@ -14,8 +15,12 @@ class UserResource extends JsonResource
             'address' => $this->address,
             'name' => $this->name,
             'league' => new LeagueResource($this->whenLoaded('league')),
-            'league_points' => $this->league_points, // Очки лиги пользователя
-
+            'league_points' => $this->league_points,
+            'squad' => $this->whenLoaded('squad', function () {
+                return $this->squad->map(function ($squad) {
+                    return new CardResourceShow($squad->card);
+                });
+            }),
         ];
     }
 }
