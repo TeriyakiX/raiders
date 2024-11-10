@@ -7,6 +7,7 @@ use App\Models\Battle;
 use App\Models\BattleLog;
 use App\Models\Card;
 use App\Models\CharacterParameters;
+use App\Models\League;
 use App\Models\Squad;
 use App\Models\User;
 use Carbon\Carbon;
@@ -33,7 +34,6 @@ class BattleService
 
     public function startBattle($attacker_id, $defender_id, $event_id = null)
     {
-
         $attacker = User::find($attacker_id);
         $defender = User::find($defender_id);
 
@@ -51,13 +51,14 @@ class BattleService
             ->get();
 
         foreach ($attackerSquad as $squadMember) {
-            if ($squadMember->card->frozen_until && $squadMember->card->frozen_until > now()) {
+            $frozenStatus = $squadMember->card->getFrozenStatus();
+            if ($frozenStatus['is_frozen']) {
                 throw new Exception(
                     json_encode([
                         'attacker_card' => [
                             'id' => $squadMember->card->id,
-                            'frozen_until' => $squadMember->card->frozen_until,
-                            'is_frozen' => true
+                            'is_frozen' => $frozenStatus['is_frozen'],
+                            'remaining_time' => $frozenStatus['remaining_time'],
                         ]
                     ])
                 );
@@ -65,13 +66,14 @@ class BattleService
         }
 
         foreach ($defenderSquad as $squadMember) {
-            if ($squadMember->card->frozen_until && $squadMember->card->frozen_until > now()) {
+            $frozenStatus = $squadMember->card->getFrozenStatus();
+            if ($frozenStatus['is_frozen']) {
                 throw new Exception(
                     json_encode([
                         'defender_card' => [
                             'id' => $squadMember->card->id,
-                            'frozen_until' => $squadMember->card->frozen_until,
-                            'is_frozen' => true
+                            'is_frozen' => $frozenStatus['is_frozen'],
+                            'remaining_time' => $frozenStatus['remaining_time'],
                         ]
                     ])
                 );
@@ -81,8 +83,8 @@ class BattleService
         $battle = Battle::create([
             'attacker_id' => $attacker_id,
             'defender_id' => $defender_id,
-            'attacker_initial_cups' => $attacker->league_points,
-            'defender_initial_cups' => $defender->league_points,
+            'attacker_initial_cups' => $attacker->cups,
+            'defender_initial_cups' => $defender->cups,
             'event_id' => $event_id,
             'status' => 'in_progress',
         ]);
@@ -109,6 +111,7 @@ class BattleService
                 ->with('card')
                 ->get();
 
+            // Проверка на замороженные карты
             foreach ($attackerSquad as $squadMember) {
                 if ($squadMember->card->frozen_until && $squadMember->card->frozen_until > now()) {
                     throw new \Exception("Attacker's card is frozen until " . $squadMember->card->frozen_until);
@@ -121,6 +124,7 @@ class BattleService
                 }
             }
 
+            // Сортировка карт по инициативе
             $attackerCards = $attackerSquad->pluck('card')->unique('id')->values();
             $defenderCards = $defenderSquad->pluck('card')->unique('id')->values();
 
@@ -128,6 +132,7 @@ class BattleService
                 throw new \Exception("Один из игроков не имеет карт в отряде.");
             }
 
+            // Сортировка карт по инициативе
             $attackerCards = $attackerCards->sortByDesc(function ($card) {
                 return $this->getCardInitiative($card);
             });
@@ -184,23 +189,62 @@ class BattleService
                 }
             }
 
-            $result = [
+            $attackerUser = User::find($battle->attacker_id);
+            $defenderUser = User::find($battle->defender_id);
+
+            $attackerChange = 0;
+            $defenderChange = 0;
+
+            if ($attackerWins > $defenderWins) {
+                $attackerChange = 10;
+                if ($defenderUser->cups >= 10) {
+                    $defenderChange = -10;
+                }
+            } elseif ($defenderWins > $attackerWins) {
+                $defenderChange = 10;
+                if ($attackerUser->cups >= 10) {
+                    $attackerChange = -10;
+                }
+            }
+
+            $attackerUser->cups = max(0, $attackerUser->cups + $attackerChange);
+            $defenderUser->cups = max(0, $defenderUser->cups + $defenderChange);
+
+            $this->assignLeague($attackerUser);
+            $this->assignLeague($defenderUser);
+
+            $attackerUser->save();
+            $defenderUser->save();
+
+            $battle->status = 'completed';
+            $battle->attacker_final_cups = $attackerChange >= 0 ? "+$attackerChange" : "$attackerChange";
+            $battle->defender_final_cups = $defenderChange >= 0 ? "+$defenderChange" : "$defenderChange";
+            $battle->save();
+
+            return [
                 'battle' => $battle->toArray(),
                 'attacker_wins' => $attackerWins,
                 'defender_wins' => $defenderWins,
                 'battle_log' => $battleLog,
             ];
-
-            $battle->status = 'completed';
-            $battle->attacker_final_cups = $attackerWins;
-            $battle->defender_final_cups = $defenderWins;
-            $battle->save();
-
-            return $result;
         } catch (\Exception $e) {
             return [
                 'error' => $e->getMessage()
             ];
+        }
+    }
+
+    protected function assignLeague(User $user)
+    {
+        $league = League::where('cups_from', '<=', $user->cups)
+            ->where('cups_to', '>=', $user->cups)
+            ->first();
+
+        if ($league) {
+            $user->league_id = $league->id;
+        } else {
+            $raidersLeague = League::where('name', 'Raiders League')->first();
+            $user->league_id = $raidersLeague ? $raidersLeague->id : null;
         }
     }
 
