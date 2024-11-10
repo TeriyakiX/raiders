@@ -15,7 +15,7 @@ class UserResource extends JsonResource
             'address' => $this->address,
             'name' => $this->name,
             'league' => new LeagueResource($this->whenLoaded('league')),
-            'league_points' => $this->league_points,
+            'cups' => $this->cups,
             'squad' => $this->whenLoaded('squad', function () {
                 return $this->squad->map(function ($squad) {
                     return new CardResourceShow($squad->card);

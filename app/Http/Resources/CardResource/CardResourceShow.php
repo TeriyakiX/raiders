@@ -14,17 +14,11 @@ class CardResourceShow extends JsonResource
      */
     public function toArray($request)
     {
-        $currentTime = now();
 
-        $frozenUntil = $this->frozen_until ? Carbon::parse($this->frozen_until) : null;
-
-        $isFrozen = $frozenUntil && $frozenUntil > $currentTime;
 
         return [
             'id' => $this->id,
             'image' => $this->metadata['image'] ?? null,
-            'frozen_until' => $frozenUntil ? $frozenUntil->toDateTimeString() : null,
-            'is_frozen' => $isFrozen,
         ];
     }
 }

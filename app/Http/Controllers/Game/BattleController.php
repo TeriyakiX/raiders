@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Game;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\CardResource\CardResourceShow;
 use App\Models\Battle;
+use App\Models\BattleLog;
+use App\Models\Card;
 use App\Models\Squad;
 use App\Models\User;
 use App\Services\BattleService;
@@ -30,106 +32,66 @@ class BattleController extends Controller
             $accessToken = $request->cookie('access_token');
 
             if (!$accessToken) {
+                Log::error("Access token is missing or invalid.");
                 return response()->json(['message' => 'Unauthorized'], 401);
             }
 
-            // Получение данных пользователя по токену
+            // Получение данных пользователя
             $userDataResponse = $this->userService->getUserData($accessToken);
+            Log::info('User data fetched: ' . json_encode($userDataResponse));
 
             if (!isset($userDataResponse['data']['id'])) {
+                Log::error("User data fetch failed: " . json_encode($userDataResponse));
                 return response()->json(['message' => 'Failed to fetch user data'], 400);
             }
 
             $attackerExternalId = $userDataResponse['data']['id'];
-
-            // Находим атакующего
             $attacker = User::where('external_id', $attackerExternalId)->first();
 
             if (!$attacker) {
+                Log::error("Attacker not found for ID: $attackerExternalId");
                 return response()->json(['message' => 'User not found'], 404);
             }
 
+            // Логирование данных атакующего и защитника
             $eventId = $request->input('event_id');
+            $defenderId = $request->input('defender_id');
+
+            Log::info("Attacker ID: $attacker->id, Defender ID: $defenderId, Event ID: $eventId");
 
             if (!$eventId) {
+                Log::error("Event ID is missing");
                 return response()->json(['message' => 'Event ID is required'], 400);
             }
-
-            $defenderId = $request->input('defender_id');
 
             if (!$defenderId || $defenderId == $attacker->id) {
                 return response()->json(['message' => 'Invalid defender ID or cannot attack yourself'], 400);
             }
 
-            // Находим защитника
             $defender = User::find($defenderId);
-
             if (!$defender) {
                 return response()->json(['message' => 'Defender not found'], 404);
             }
 
-            // Проверка на наличие карт у атакующего
-            $attackerSquadCardsCount = Squad::where('user_id', $attacker->id)
-                ->where('event_id', $eventId)
-                ->count();
-
-            if ($attackerSquadCardsCount < 3) {
-                return response()->json(['message' => 'You need at least 3 cards in your squad for this event to start a battle'], 400);
+            // Проверка отрядов
+            if ($this->checkSquadSize($attacker->id, $eventId) < 3) {
+                return response()->json(['message' => 'You need at least 3 cards in your squad'], 400);
+            }
+            if ($this->checkSquadSize($defender->id, $eventId) < 3) {
+                return response()->json(['message' => 'The defender needs at least 3 cards'], 400);
             }
 
-            // Проверка на наличие карт у защитника
-            $defenderSquadCardsCount = Squad::where('user_id', $defender->id)
-                ->where('event_id', $eventId)
-                ->count();
-
-            if ($defenderSquadCardsCount < 3) {
-                return response()->json(['message' => 'The defender needs at least 3 cards in their squad for this event to start a battle'], 400);
-            }
-
-            // Проверка на замороженные карты у атакующего
-            $attackerSquad = Squad::where('user_id', $attacker->id)
-                ->where('event_id', $eventId)
-                ->with('card')
-                ->get();
-
-            foreach ($attackerSquad as $squadMember) {
-                if ($squadMember->card->frozen_until && $squadMember->card->frozen_until > now()) {
-                    throw new Exception(
-                        json_encode([
-                            'attacker_card' => [
-                                'id' => $squadMember->card->id,
-                                'frozen_until' => $squadMember->card->frozen_until,
-                                'is_frozen' => true
-                            ]
-                        ])
-                    );
-                }
-            }
-
-            // Проверка на замороженные карты у защитника
-            $defenderSquad = Squad::where('user_id', $defender->id)
-                ->where('event_id', $eventId)
-                ->with('card')
-                ->get();
-
-            foreach ($defenderSquad as $squadMember) {
-                if ($squadMember->card->frozen_until && $squadMember->card->frozen_until > now()) {
-                    throw new Exception(
-                        json_encode([
-                            'defender_card' => [
-                                'id' => $squadMember->card->id,
-                                'frozen_until' => $squadMember->card->frozen_until,
-                                'is_frozen' => true
-                            ]
-                        ])
-                    );
-                }
-            }
-
-            // Если все проверки пройдены, запускаем бой
+            // Запуск битвы
             $battle = $this->battleService->startBattle($attacker->id, $defender->id, $eventId);
 
-            return response()->json(['message' => 'Battle started successfully', 'battle_id' => $battle->id]);
+            if ($battle && isset($battle->id)) {
+                Log::info("Battle started successfully: Battle ID - " . $battle->id);
+                return response()->json(['message' => 'Battle started successfully', 'battle_id' => $battle->id]);
+            } else {
+                Log::error("Battle creation failed");
+                return response()->json(['message' => 'Failed to start battle'], 500);
+            }
+
         } catch (\Exception $e) {
             Log::error("Failed to start battle: " . $e->getMessage(), [
                 'exception' => $e,
@@ -138,49 +100,59 @@ class BattleController extends Controller
                 'event_id' => $eventId ?? 'N/A',
             ]);
 
-            $errorMessage = $e->getMessage();
-
-            // Обработка ошибок, связанных с замороженными картами
-            if (strpos($errorMessage, 'attacker_card') !== false || strpos($errorMessage, 'defender_card') !== false) {
-                return response()->json([
-                    'message' => 'Failed to start battle. Card is frozen.',
-                    'card_info' => json_decode($errorMessage)  // Декодируем JSON и передаем в ответ
-                ], 400);
-            }
-
             return response()->json(['message' => 'Failed to start battle.'], 500);
+        }
+    }
+    private function checkSquadSize($userId, $eventId)
+    {
+        $squadSize = Squad::where('user_id', $userId)
+            ->where('event_id', $eventId)
+            ->count();
+
+        return $squadSize;
+    }
+
+// Проверка замороженных карт
+    private function checkFrozenCards($userId, $eventId, $role)
+    {
+        $squad = Squad::where('user_id', $userId)
+            ->where('event_id', $eventId)
+            ->with('card')
+            ->get();
+
+        foreach ($squad as $squadMember) {
+            if ($squadMember->card->frozen_until && $squadMember->card->frozen_until > now()) {
+                throw new Exception(
+                    json_encode([
+                        "{$role}_card" => [
+                            'id' => $squadMember->card->id,
+                            'frozen_until' => $squadMember->card->frozen_until,
+                            'is_frozen' => true
+                        ]
+                    ])
+                );
+            }
         }
     }
 
     public function completeBattle(Request $request, $battle_id)
     {
-        try {
-            $battleResult = $this->battleService->performBattle($battle_id);
+        // Вызов сервиса для выполнения битвы и получения информации
+        $battleResult = $this->battleService->performBattle($battle_id);
 
-            if (isset($battleResult['error'])) {
-                return response()->json([
-                    'message' => 'Failed to complete battle.',
-                    'error' => $battleResult['error']
-                ], 500);
-            }
-
-            return response()->json([
-                'message' => 'Battle completed successfully.',
-                'battle_result' => $battleResult
-            ]);
-        } catch (\Exception $e) {
-            Log::error("Failed to complete battle: " . $e->getMessage(), [
-                'battle_id' => $battle_id,
-                'exception' => $e
-            ]);
-
+        // Проверка на ошибку выполнения битвы
+        if (isset($battleResult['error'])) {
             return response()->json([
                 'message' => 'Failed to complete battle.',
-                'error' => $e->getMessage()
+                'error' => $battleResult['error']
             ], 500);
         }
-    }
 
+        return response()->json([
+            'message' => 'Battle completed successfully.',
+            'battle_info' => $battleResult
+        ]);
+    }
     public function getBattleStatus($battle_id)
     {
         try {
