@@ -9,7 +9,7 @@ class BattleLog extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['battle_id', 'card_id', 'result'];
+    protected $fillable = ['battle_id', 'round','attacker_card_id','defender_card_id', 'result', 'created_at', 'updated_at'];
 
     public function battle()
     {

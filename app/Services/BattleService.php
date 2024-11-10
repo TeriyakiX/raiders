@@ -4,11 +4,13 @@ namespace App\Services;
 
 use App\Http\Resources\CardResource\CardResourceShow;
 use App\Models\Battle;
+use App\Models\BattleLog;
 use App\Models\Card;
 use App\Models\CharacterParameters;
 use App\Models\Squad;
 use App\Models\User;
 use Carbon\Carbon;
+use Exception;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -18,7 +20,7 @@ use Illuminate\Support\Facades\Log;
 
 class BattleService
 {
-    protected $freezeDuration = 300; // Заморозка на 5 минут (300 секунд)
+    protected $freezeDuration = 300;
 
     protected $userService;
     protected $cardService;
@@ -31,147 +33,173 @@ class BattleService
 
     public function startBattle($attacker_id, $defender_id, $event_id = null)
     {
-        try {
-            // Проверка существования пользователей
-            $attacker = User::find($attacker_id);
-            $defender = User::find($defender_id);
 
-            if (!$attacker || !$defender) {
-                throw new \Exception("Attacker or Defender not found");
-            }
+        $attacker = User::find($attacker_id);
+        $defender = User::find($defender_id);
 
-            // Создание записи о бое с учетом event_id
-            $battle = Battle::create([
-                'attacker_id' => $attacker_id,
-                'defender_id' => $defender_id,
-                'attacker_initial_cups' => $attacker->league_points,
-                'defender_initial_cups' => $defender->league_points,
-                'event_id' => $event_id, // Привязываем event_id к бою
-                'status' => 'in_progress',
-            ]);
-
-            return $battle; // Вернуть объект боя вместо JSON
-        } catch (\Exception $e) {
-            Log::error("Failed to start battle: " . $e->getMessage(), [
-                'attacker_id' => $attacker_id,
-                'defender_id' => $defender_id,
-                'event_id' => $event_id
-            ]);
-            return response()->json([
-                'message' => 'Failed to start battle.',
-                'error' => $e->getMessage()
-            ], 500);
+        if (!$attacker || !$defender) {
+            throw new Exception("Attacker or Defender not found");
         }
+
+        $attackerSquad = Squad::where('user_id', $attacker_id)
+            ->where('event_id', $event_id)
+            ->with('card')
+            ->get();
+        $defenderSquad = Squad::where('user_id', $defender_id)
+            ->where('event_id', $event_id)
+            ->with('card')
+            ->get();
+
+        foreach ($attackerSquad as $squadMember) {
+            if ($squadMember->card->frozen_until && $squadMember->card->frozen_until > now()) {
+                throw new Exception(
+                    json_encode([
+                        'attacker_card' => [
+                            'id' => $squadMember->card->id,
+                            'frozen_until' => $squadMember->card->frozen_until,
+                            'is_frozen' => true
+                        ]
+                    ])
+                );
+            }
+        }
+
+        foreach ($defenderSquad as $squadMember) {
+            if ($squadMember->card->frozen_until && $squadMember->card->frozen_until > now()) {
+                throw new Exception(
+                    json_encode([
+                        'defender_card' => [
+                            'id' => $squadMember->card->id,
+                            'frozen_until' => $squadMember->card->frozen_until,
+                            'is_frozen' => true
+                        ]
+                    ])
+                );
+            }
+        }
+
+        $battle = Battle::create([
+            'attacker_id' => $attacker_id,
+            'defender_id' => $defender_id,
+            'attacker_initial_cups' => $attacker->league_points,
+            'defender_initial_cups' => $defender->league_points,
+            'event_id' => $event_id,
+            'status' => 'in_progress',
+        ]);
+
+        return $battle;
     }
 
     public function performBattle($battle_id)
     {
         try {
-            // Получение информации о бое
             $battle = Battle::findOrFail($battle_id);
-            Log::info("Battle found: ", $battle->toArray());
 
-            // Получение отрядов для атакующего и защищающегося
-            $attackerSquad = Squad::where('user_id', $battle->attacker_id)->with('card')->get();
-            $defenderSquad = Squad::where('user_id', $battle->defender_id)->with('card')->get();
-            Log::info("Attacker squad: ", $attackerSquad->toArray());
-            Log::info("Defender squad: ", $defenderSquad->toArray());
+            $eventId = $battle->event_id;
+            if (!$eventId) {
+                throw new \Exception("Event ID is missing in battle.");
+            }
 
-            // Извлечение карточек
-            $attackerCards = $attackerSquad->pluck('card')->toArray();
-            $defenderCards = $defenderSquad->pluck('card')->toArray();
+            $attackerSquad = Squad::where('user_id', $battle->attacker_id)
+                ->where('event_id', $eventId)
+                ->with('card')
+                ->get();
+            $defenderSquad = Squad::where('user_id', $battle->defender_id)
+                ->where('event_id', $eventId)
+                ->with('card')
+                ->get();
+
+            foreach ($attackerSquad as $squadMember) {
+                if ($squadMember->card->frozen_until && $squadMember->card->frozen_until > now()) {
+                    throw new \Exception("Attacker's card is frozen until " . $squadMember->card->frozen_until);
+                }
+            }
+
+            foreach ($defenderSquad as $squadMember) {
+                if ($squadMember->card->frozen_until && $squadMember->card->frozen_until > now()) {
+                    throw new \Exception("Defender's card is frozen until " . $squadMember->card->frozen_until);
+                }
+            }
+
+            $attackerCards = $attackerSquad->pluck('card')->unique('id')->values();
+            $defenderCards = $defenderSquad->pluck('card')->unique('id')->values();
 
             if (empty($attackerCards) || empty($defenderCards)) {
                 throw new \Exception("Один из игроков не имеет карт в отряде.");
             }
 
-            // Сортировка карт по инициативе
-            usort($attackerCards, function ($a, $b) {
-                return $this->getCardInitiative($a) < $this->getCardInitiative($b) ? 1 : -1;
+            $attackerCards = $attackerCards->sortByDesc(function ($card) {
+                return $this->getCardInitiative($card);
+            });
+            $defenderCards = $defenderCards->sortByDesc(function ($card) {
+                return $this->getCardInitiative($card);
             });
 
-            usort($defenderCards, function ($a, $b) {
-                return $this->getCardInitiative($a) < $this->getCardInitiative($b) ? 1 : -1;
-            });
-
-            Log::info("Sorted attacker cards: ", $attackerCards);
-            Log::info("Sorted defender cards: ", $defenderCards);
-
-            // Проведение боя по раундам
             $rounds = min(count($attackerCards), count($defenderCards));
             $attackerWins = 0;
             $defenderWins = 0;
+            $battleLog = [];
 
-            for ($i = 0; $i < $rounds; $i++) {
+            foreach (range(0, $rounds - 1) as $i) {
                 $attackerCard = $attackerCards[$i];
                 $defenderCard = $defenderCards[$i];
 
                 $attackerParams = $this->getCharacterParameters($attackerCard);
                 $defenderParams = $this->getCharacterParameters($defenderCard);
 
-                Log::info("Attacker card parameters: ", $attackerParams->toArray());
-                Log::info("Defender card parameters: ", $defenderParams->toArray());
-
                 $attackerScore = $attackerParams->damage_numeric + $attackerParams->shield_numeric + $attackerParams->health_numeric;
                 $defenderScore = $defenderParams->damage_numeric + $defenderParams->shield_numeric + $defenderParams->health_numeric;
 
-                Log::info("Comparing cards: ", [
-                    'attacker_card' => [
-                        'id' => $attackerCard['id'],
-                        'damage' => $attackerParams->damage_numeric,
-                        'shield' => $attackerParams->shield_numeric,
-                        'health' => $attackerParams->health_numeric,
-                        'total' => $attackerScore
-                    ],
-                    'defender_card' => [
-                        'id' => $defenderCard['id'],
-                        'damage' => $defenderParams->damage_numeric,
-                        'shield' => $defenderParams->shield_numeric,
-                        'health' => $defenderParams->health_numeric,
-                        'total' => $defenderScore
-                    ],
+                if ($attackerScore < $defenderScore) {
+                    $attackerCard->frozen_until = now()->addMinute();
+                    $attackerCard->save();
+                } elseif ($defenderScore < $attackerScore) {
+                    $defenderCard->frozen_until = now()->addMinute();
+                    $defenderCard->save();
+                }
+
+                $roundResult = [
+                    'round' => $i + 1,
+                    'attacker_card' => (new CardResourceShow($attackerCard))->toArray(request()),
+                    'defender_card' => (new CardResourceShow($defenderCard))->toArray(request()),
                     'result' => $attackerScore > $defenderScore ? 'Attacker wins' : ($attackerScore < $defenderScore ? 'Defender wins' : 'Draw')
+                ];
+
+                BattleLog::create([
+                    'battle_id' => $battle_id,
+                    'round' => $i + 1,
+                    'attacker_card_id' => $attackerCard->id,
+                    'defender_card_id' => $defenderCard->id,
+                    'result' => $roundResult['result'],
+                    'created_at' => now(),
+                    'updated_at' => now(),
                 ]);
 
+                $battleLog[] = $roundResult;
+
                 if ($attackerScore > $defenderScore) {
-                    // Атакующая карта выигрывает
-                    $this->updateCardStatus($attackerCard['id'], 'active');
-                    $this->updateCardStatus($defenderCard['id'], 'frozen');
                     $attackerWins++;
-                    Log::info("Round result: Attacker wins", [
-                        'attacker_card_id' => $attackerCard['id'],
-                        'defender_card_id' => $defenderCard['id']
-                    ]);
                 } else {
-                    // Защитная карта выигрывает или ничья
-                    $this->updateCardStatus($attackerCard['id'], 'frozen');
-                    $this->updateCardStatus($defenderCard['id'], 'active');
                     $defenderWins++;
-                    Log::info("Round result: Defender wins or draw", [
-                        'attacker_card_id' => $attackerCard['id'],
-                        'defender_card_id' => $defenderCard['id']
-                    ]);
                 }
             }
 
-            // Обновление статуса боя и запись результатов
+            $result = [
+                'attacker_wins' => $attackerWins,
+                'defender_wins' => $defenderWins,
+                'battle_log' => $battleLog,
+            ];
+
             $battle->status = 'completed';
             $battle->attacker_final_cups = $attackerWins;
             $battle->defender_final_cups = $defenderWins;
             $battle->save();
 
-            Log::info("Battle completed and updated: ", [
-                'battle' => $battle->toArray(),
-                'attacker_wins' => $attackerWins,
-                'defender_wins' => $defenderWins
-            ]);
-
+            return $result;
         } catch (\Exception $e) {
-            Log::error("Failed to perform battle: " . $e->getMessage(), [
-                'battle_id' => $battle_id,
-                'exception' => $e
-            ]);
-            throw $e;
+            return [
+                'error' => $e->getMessage()
+            ];
         }
     }
 
@@ -184,11 +212,11 @@ class BattleService
         $defenderScore = $defenderParams->damage_numeric + $defenderParams->shield_numeric + $defenderParams->health_numeric;
 
         if ($attackerScore > $defenderScore) {
-            return 1; // Атакующая карта выигрывает
+            return 1;
         } elseif ($attackerScore < $defenderScore) {
-            return -1; // Защитная карта выигрывает
+            return -1;
         }
-        return 0; // В случае ничьи
+        return 0;
     }
 
     protected function getCharacterParameters($card)
@@ -202,7 +230,6 @@ class BattleService
 
     public function getCardId($cardObject)
     {
-        // Проверяем тип данных и преобразуем в объект, если это массив
         if (is_array($cardObject)) {
             $cardObject = (object) $cardObject;
         } elseif (is_string($cardObject)) {
@@ -223,7 +250,6 @@ class BattleService
             if (isset($metadata->attributes) && is_array($metadata->attributes)) {
                 $id = null;
                 foreach ($metadata->attributes as $attribute) {
-                    // Преобразуем каждый атрибут в объект, если это массив
                     if (is_array($attribute)) {
                         $attribute = (object) $attribute;
                     }
@@ -253,17 +279,18 @@ class BattleService
         return $id;
     }
 
-    private function updateCardStatus($cardId, $status)
+    public function updateCardStatus($cardId, $status)
     {
-        // Пример логики обновления статуса карты
-        $card = Card::findOrFail($cardId);
-        $card->status = $status;
-        if ($status == 'frozen') {
-            $card->frozen_until = now()->addMinute(); // Заморозка на 1 минуту
-        } else {
-            $card->frozen_until = null;
+        $card = Card::find($cardId);
+        if ($card) {
+            $card->status = $status;
+            if ($status === 'frozen') {
+                $card->frozen_until = now()->addMinutes(5);
+            } else {
+                $card->frozen_until = null;
+            }
+            $card->save();
         }
-        $card->save();
     }
 
     protected function getCardInitiative($card)
@@ -272,98 +299,18 @@ class BattleService
         return $characterParams ? $characterParams->initiative_numeric : 0;
     }
 
-    public function generateBattleLog($battle_id)
-    {
-        try {
-            $battleLog = [];
-            // Получение информации о бое
-            $battle = Battle::findOrFail($battle_id);
-            $battleLog['battle'] = $battle->toArray();
-
-            // Получение отрядов для атакующего и защищающегося
-            $attackerSquad = Squad::where('user_id', $battle->attacker_id)->with('card')->get();
-            $defenderSquad = Squad::where('user_id', $battle->defender_id)->with('card')->get();
-
-            // Извлечение карточек
-            $attackerCards = $attackerSquad->pluck('card');
-            $defenderCards = $defenderSquad->pluck('card');
-
-            // Сортировка карт по инициативе
-            $attackerCards = $attackerCards->sortByDesc(function ($card) {
-                return $this->getCardInitiative($card);
-            });
-            $defenderCards = $defenderCards->sortByDesc(function ($card) {
-                return $this->getCardInitiative($card);
-            });
-
-            // Проведение боя по раундам
-            $rounds = min($attackerCards->count(), $defenderCards->count());
-            $attackerWins = 0;
-            $defenderWins = 0;
-
-            for ($i = 0; $i < $rounds; $i++) {
-                $attackerCard = $attackerCards[$i];
-                $defenderCard = $defenderCards[$i];
-
-                $attackerParams = $this->getCharacterParameters($attackerCard);
-                $defenderParams = $this->getCharacterParameters($defenderCard);
-
-                $attackerScore = $attackerParams->damage_numeric + $attackerParams->shield_numeric + $attackerParams->health_numeric;
-                $defenderScore = $defenderParams->damage_numeric + $defenderParams->shield_numeric + $defenderParams->health_numeric;
-
-                $roundLog = [
-                    'round' => $i + 1,
-                    'attacker_card' => (new CardResourceShow($attackerCard))->toArray(request()),
-                    'defender_card' => (new CardResourceShow($defenderCard))->toArray(request()),
-                    'result' => $attackerScore > $defenderScore ? 'Attacker wins' : ($attackerScore < $defenderScore ? 'Defender wins' : 'Draw')
-                ];
-
-                if ($attackerScore > $defenderScore) {
-                    // Атакующая карта выигрывает
-                    $this->updateCardStatus($attackerCard->id, 'active');
-                    $this->updateCardStatus($defenderCard->id, 'frozen');
-                    $attackerWins++;
-                } else {
-                    // Защитная карта выигрывает или ничья
-                    $this->updateCardStatus($attackerCard->id, 'frozen');
-                    $this->updateCardStatus($defenderCard->id, 'active');
-                    $defenderWins++;
-                }
-
-                $battleLog['rounds'][] = $roundLog;
-            }
-
-            // Обновление статуса боя и запись результатов
-            $battle->status = 'completed';
-            $battle->attacker_final_cups = $attackerWins;
-            $battle->defender_final_cups = $defenderWins;
-            $battle->save();
-
-            return $battleLog;
-        } catch (\Exception $e) {
-            Log::error("Failed to generate battle log: " . $e->getMessage(), [
-                'battle_id' => $battle_id,
-                'exception' => $e
-            ]);
-            throw $e;
-        }
-    }
 
     public function getBattleStatus($battle_id)
     {
         try {
-            // Получение информации о бое
             $battle = Battle::findOrFail($battle_id);
 
-            // Получение event_id из боя
             $eventId = $battle->event_id;
 
-            // Проверка на случай, если event_id отсутствует или не задан
             if (!$eventId) {
                 throw new \Exception("Event ID is missing in battle.");
             }
 
-            // Получение отрядов для атакующего и защищающегося, относящихся к этому событию
             $attackerSquad = Squad::where('user_id', $battle->attacker_id)
                 ->where('event_id', $eventId)
                 ->with('card')
@@ -373,7 +320,6 @@ class BattleService
                 ->with('card')
                 ->get();
 
-            // Преобразование карточек в нужный формат с использованием ресурса
             $attackerCards = $attackerSquad->map(function ($squad) {
                 return new CardResourceShow($squad->card);
             });
@@ -382,7 +328,6 @@ class BattleService
                 return new CardResourceShow($squad->card);
             });
 
-            // Формирование ответа
             $response = [
                 'battle' => $battle->toArray(),
                 'attacker_squad' => $attackerCards->toArray(),
