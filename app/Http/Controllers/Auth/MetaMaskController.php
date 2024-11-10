@@ -74,13 +74,18 @@ class MetaMaskController extends Controller
 
         if (!$userHasCards) {
             try {
-                $this->fetchAndSaveUserCards($accessToken);
+                $this->fetchAndSaveUserCards($accessToken, $from);
             } catch (\Exception $e) {
                 Log::error('Error fetching or saving user cards: ' . $e->getMessage());
                 return response()->json(['message' => 'Failed to retrieve user cards'], 500);
             }
         } else {
-            Log::info('User cards already exist, skipping fetching cards.');
+            try {
+                $this->fetchAndSaveUserCards($accessToken, $from);
+            } catch (\Exception $e) {
+                Log::error('Error fetching or saving user cards: ' . $e->getMessage());
+                return response()->json(['message' => 'Failed to retrieve or update user cards'], 500);
+            }
         }
 
         Log::info("Access Token to be set: " . $accessToken);
@@ -101,9 +106,9 @@ class MetaMaskController extends Controller
         return $response;
     }
 
-    protected function fetchAndSaveUserCards($accessToken)
+    protected function fetchAndSaveUserCards($accessToken, $owner)
     {
-
+        // Получаем инвентарь пользователя
         $data = $this->nftCardService->getUserInventory($accessToken);
 
         if (isset($data['error'])) {
@@ -111,6 +116,7 @@ class MetaMaskController extends Controller
             throw new \Exception('Error fetching user cards: ' . $data['error']);
         }
 
+        // Обрабатываем карточки
         foreach ($data['data'] as $cardData) {
             $metadata = [
                 'image' => $cardData['metadata']['image'],
@@ -120,15 +126,24 @@ class MetaMaskController extends Controller
                 'attributes' => $cardData['metadata']['attributes']
             ];
 
-            Card::updateOrCreate(
-                ['card_id' => $cardData['id']],
-                [
+            $existingCard = Card::where('card_id', $cardData['id'])->first();
+
+            if (!$existingCard) {
+                Card::create([
                     'contract' => $cardData['contract'],
-                    'owner' => $cardData['owner'],
+                    'owner' => $owner,
                     'balance' => $cardData['balance'],
                     'metadata' => $metadata,
-                ]
-            );
+                    'card_id' => $cardData['id'],
+                ]);
+            } else {
+                $existingCard->update([
+                    'contract' => $cardData['contract'],
+                    'owner' => $owner,
+                    'balance' => $cardData['balance'],
+                    'metadata' => $metadata,
+                ]);
+            }
         }
     }
 }

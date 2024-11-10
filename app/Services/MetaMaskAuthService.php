@@ -39,16 +39,12 @@ class MetaMaskAuthService
                 return null;
             }
 
-            // Получаем значение куки 'access_token' из ответа
             $cookieHeader = $response->header('Set-Cookie');
 
-            // Логирование заголовка Set-Cookie для проверки
             Log::info("Set-Cookie Header: " . $cookieHeader);
 
-            // Извлекаем значение токена из заголовка куки
             $accessToken = $this->extractAccessTokenFromCookieHeader($cookieHeader);
 
-            // Логирование извлеченного токена для проверки
             Log::info("Extracted Access Token: " . $accessToken);
 
             return $accessToken;
@@ -61,7 +57,6 @@ class MetaMaskAuthService
 
     protected function extractAccessTokenFromCookieHeader(string $cookieHeader): ?string
     {
-        // Пример извлечения значения токена из заголовка Set-Cookie
         if (preg_match('/access_token=([^;]+)/', $cookieHeader, $matches)) {
             return $matches[1];
         }
