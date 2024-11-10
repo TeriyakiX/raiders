@@ -108,7 +108,6 @@ class MetaMaskController extends Controller
 
     protected function fetchAndSaveUserCards($accessToken, $owner)
     {
-        // Получаем инвентарь пользователя
         $data = $this->nftCardService->getUserInventory($accessToken);
 
         if (isset($data['error'])) {
@@ -116,7 +115,6 @@ class MetaMaskController extends Controller
             throw new \Exception('Error fetching user cards: ' . $data['error']);
         }
 
-        // Обрабатываем карточки
         foreach ($data['data'] as $cardData) {
             $metadata = [
                 'image' => $cardData['metadata']['image'],

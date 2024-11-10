@@ -185,6 +185,7 @@ class BattleService
             }
 
             $result = [
+                'battle' => $battle->toArray(),
                 'attacker_wins' => $attackerWins,
                 'defender_wins' => $defenderWins,
                 'battle_log' => $battleLog,

@@ -9,6 +9,7 @@ use App\Models\Squad;
 use App\Models\User;
 use App\Services\BattleService;
 use App\Services\UserService;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -32,6 +33,7 @@ class BattleController extends Controller
                 return response()->json(['message' => 'Unauthorized'], 401);
             }
 
+            // Получение данных пользователя по токену
             $userDataResponse = $this->userService->getUserData($accessToken);
 
             if (!isset($userDataResponse['data']['id'])) {
@@ -40,6 +42,7 @@ class BattleController extends Controller
 
             $attackerExternalId = $userDataResponse['data']['id'];
 
+            // Находим атакующего
             $attacker = User::where('external_id', $attackerExternalId)->first();
 
             if (!$attacker) {
@@ -58,26 +61,72 @@ class BattleController extends Controller
                 return response()->json(['message' => 'Invalid defender ID or cannot attack yourself'], 400);
             }
 
+            // Находим защитника
             $defender = User::find($defenderId);
 
             if (!$defender) {
                 return response()->json(['message' => 'Defender not found'], 404);
             }
 
+            // Проверка на наличие карт у атакующего
             $attackerSquadCardsCount = Squad::where('user_id', $attacker->id)
                 ->where('event_id', $eventId)
                 ->count();
+
             if ($attackerSquadCardsCount < 3) {
                 return response()->json(['message' => 'You need at least 3 cards in your squad for this event to start a battle'], 400);
             }
 
+            // Проверка на наличие карт у защитника
             $defenderSquadCardsCount = Squad::where('user_id', $defender->id)
                 ->where('event_id', $eventId)
                 ->count();
+
             if ($defenderSquadCardsCount < 3) {
                 return response()->json(['message' => 'The defender needs at least 3 cards in their squad for this event to start a battle'], 400);
             }
 
+            // Проверка на замороженные карты у атакующего
+            $attackerSquad = Squad::where('user_id', $attacker->id)
+                ->where('event_id', $eventId)
+                ->with('card')
+                ->get();
+
+            foreach ($attackerSquad as $squadMember) {
+                if ($squadMember->card->frozen_until && $squadMember->card->frozen_until > now()) {
+                    throw new Exception(
+                        json_encode([
+                            'attacker_card' => [
+                                'id' => $squadMember->card->id,
+                                'frozen_until' => $squadMember->card->frozen_until,
+                                'is_frozen' => true
+                            ]
+                        ])
+                    );
+                }
+            }
+
+            // Проверка на замороженные карты у защитника
+            $defenderSquad = Squad::where('user_id', $defender->id)
+                ->where('event_id', $eventId)
+                ->with('card')
+                ->get();
+
+            foreach ($defenderSquad as $squadMember) {
+                if ($squadMember->card->frozen_until && $squadMember->card->frozen_until > now()) {
+                    throw new Exception(
+                        json_encode([
+                            'defender_card' => [
+                                'id' => $squadMember->card->id,
+                                'frozen_until' => $squadMember->card->frozen_until,
+                                'is_frozen' => true
+                            ]
+                        ])
+                    );
+                }
+            }
+
+            // Если все проверки пройдены, запускаем бой
             $battle = $this->battleService->startBattle($attacker->id, $defender->id, $eventId);
 
             return response()->json(['message' => 'Battle started successfully', 'battle_id' => $battle->id]);
@@ -91,6 +140,7 @@ class BattleController extends Controller
 
             $errorMessage = $e->getMessage();
 
+            // Обработка ошибок, связанных с замороженными картами
             if (strpos($errorMessage, 'attacker_card') !== false || strpos($errorMessage, 'defender_card') !== false) {
                 return response()->json([
                     'message' => 'Failed to start battle. Card is frozen.',
