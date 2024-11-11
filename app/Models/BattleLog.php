@@ -20,4 +20,14 @@ class BattleLog extends Model
     {
         return $this->belongsTo(Card::class);
     }
+
+    public function attacker_card()
+    {
+        return $this->belongsTo(Card::class, 'attacker_card_id');
+    }
+
+    public function defender_card()
+    {
+        return $this->belongsTo(Card::class, 'defender_card_id');
+    }
 }

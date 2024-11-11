@@ -190,64 +190,65 @@ class BattleService
     {
         Log::info("Performing battle with ID: $battle_id");
 
-        // Получаем информацию о битве
         $battle = Battle::find($battle_id);
 
-        // Проверка на наличие битвы
         if (!$battle) {
             Log::error("Battle not found with ID: $battle_id");
             return ['error' => 'Battle not found'];
         }
 
-        // Получаем информацию о раундах из таблицы BattleLog
+        $initialAttackerCups = $battle->attacker_initial_cups;
+        $initialDefenderCups = $battle->defender_initial_cups;
+        $attackerFinalCups = $battle->attacker_final_cups;
+        $defenderFinalCups = $battle->defender_final_cups;
+
+        $attackerCupsChange = $attackerFinalCups - $initialAttackerCups;
+        $defenderCupsChange = $defenderFinalCups - $initialDefenderCups;
+
         $rounds = BattleLog::where('battle_id', $battle_id)->get();
 
-        // Если раунды не найдены
         if ($rounds->isEmpty()) {
             Log::error("No rounds found for battle with ID: $battle_id");
             return ['error' => 'No rounds found for this battle.'];
         }
 
-        // Массив для хранения информации о каждом раунде
         $roundsInfo = $rounds->map(function ($round) {
             return [
                 'round' => $round->round,
-                'attacker_card_id' => $round->attacker_card_id,
-                'defender_card_id' => $round->defender_card_id,
+                'attacker_card' => new CardResourceShow($round->attacker_card),
+                'defender_card' => new CardResourceShow($round->defender_card),
                 'result' => $round->result,
             ];
         });
 
-        // Получаем информацию о пользователях
-        $attackerUser = User::find($battle->attacker_id);
-        $defenderUser = User::find($battle->defender_id);
-
-        // Проверка наличия пользователей
-        if (!$attackerUser || !$defenderUser) {
-            Log::error("Attacker or Defender not found for battle ID: $battle_id");
-            return ['error' => 'Attacker or Defender not found'];
-        }
-
-        // Формируем финальную информацию о битве
         $battleInfo = [
-            'battle_id' => $battle->id,
-            'status' => $battle->status,
+            'battle' => [
+                'id' => $battle->id,
+                'attacker_id' => $battle->attacker_id,
+                'defender_id' => $battle->defender_id,
+                'attacker_initial_cups' => $initialAttackerCups,
+                'defender_initial_cups' => $initialDefenderCups,
+                'attacker_final_cups' => $attackerFinalCups,
+                'defender_final_cups' => $defenderFinalCups,
+                'event_id' => $battle->event_id,
+                'status' => $battle->status,
+                'created_at' => $battle->created_at,
+                'updated_at' => $battle->updated_at,
+            ],
             'attacker' => [
-                'id' => $attackerUser->id,
-                'cups' => $attackerUser->cups,
-                'name' => $attackerUser->name,
+                'id' => $battle->attacker_id,
+                'name' => optional($battle->attacker)->name,
+                'cups' => $attackerFinalCups,
+                'cups_change' => $attackerCupsChange > 0 ? "+$attackerCupsChange" : $attackerCupsChange,
             ],
             'defender' => [
-                'id' => $defenderUser->id,
-                'cups' => $defenderUser->cups,
-                'name' => $defenderUser->name,
+                'id' => $battle->defender_id,
+                'name' => optional($battle->defender)->name,
+                'cups' => $defenderFinalCups,
+                'cups_change' => $defenderCupsChange > 0 ? "+$defenderCupsChange" : $defenderCupsChange,
             ],
             'rounds' => $roundsInfo,
         ];
-
-        // Обновляем статус битвы на 'completed'
-        $battle->status = 'completed';
-        $battle->save();
 
         return $battleInfo;
     }

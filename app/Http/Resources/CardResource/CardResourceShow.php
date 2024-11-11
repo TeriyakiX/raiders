@@ -14,8 +14,6 @@ class CardResourceShow extends JsonResource
      */
     public function toArray($request)
     {
-
-
         return [
             'id' => $this->id,
             'image' => $this->metadata['image'] ?? null,
