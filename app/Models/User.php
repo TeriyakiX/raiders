@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Log;
 use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
@@ -72,6 +73,27 @@ class User extends Authenticatable
     public function league()
     {
         return $this->belongsTo(League::class, 'league_id');
+    }
+
+
+    public function updateLeague()
+    {
+        $currentCups = $this->cups;
+
+        $league = League::where('cups_from', '<=', $currentCups)
+            ->where('cups_to', '>=', $currentCups)
+            ->first();
+
+        if ($league && $this->league_id !== $league->id) {
+            $this->league_id = $league->id;
+            $this->save();
+
+            Log::info("User's league updated successfully", [
+                'user_id' => $this->id,
+                'league_id' => $league->id,
+                'league_name' => $league->name,
+            ]);
+        }
     }
 
 

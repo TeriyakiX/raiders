@@ -13,6 +13,7 @@ use App\Models\User;
 use App\Services\NftCardService;
 use App\Services\UserService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class GameController extends Controller
@@ -57,22 +58,38 @@ class GameController extends Controller
                 return response()->json(['message' => 'User already joined this event'], 400);
             }
 
-            $event->users()->attach($user->id);
+            // Начинаем транзакцию
+            DB::beginTransaction();
 
-            $cards = $request->input('cards');
+            // Попытка записать пользователя на событие
+            try {
+                $event->users()->attach($user->id);
 
-            if (!$cards || !is_array($cards)) {
-                return response()->json(['message' => 'No cards provided or invalid format'], 400);
+                $cards = $request->input('cards');
+
+                if (!$cards || !is_array($cards)) {
+                    return response()->json(['message' => 'No cards provided or invalid format'], 400);
+                }
+
+                // Добавление карточек в отряд
+                foreach ($cards as $cardIdentifier) {
+                    $this->addCardToSquad($user, $event, $cardIdentifier);
+                }
+
+                // Если все прошло успешно, сохраняем изменения
+                DB::commit();
+
+                $event->load('users');
+                return new EventResource($event);
+            } catch (\Exception $e) {
+                // Если произошла ошибка при добавлении карт или других операций, откатываем транзакцию
+                DB::rollBack();
+
+                // Логируем ошибку
+                Log::error("Failed to add cards or user to event: " . $e->getMessage());
+
+                return response()->json(['message' => 'Failed to add cards or user to event: ' . $e->getMessage()], 500);
             }
-
-            foreach ($cards as $cardIdentifier) {
-                $this->addCardToSquad($user, $event, $cardIdentifier);
-            }
-
-            $event->load('users');
-
-            return new EventResource($event);
-
         } catch (\Exception $e) {
             Log::error("Failed to process the request: " . $e->getMessage());
             return response()->json(['message' => 'Failed to process the request: ' . $e->getMessage()], 500);
