@@ -8,6 +8,8 @@ use App\Http\Resources\EventResource\EventResource;
 use App\Http\Resources\EventResource\EventShowResource;
 use App\Models\Event;
 use App\Models\Filter;
+use App\Models\Location;
+use App\Models\Preset;
 use App\Services\MetaMaskAuthService;
 use Illuminate\Support\Facades\Log;
 
@@ -26,14 +28,24 @@ class EventsController extends Controller
         return EventShowResource::collection($events); // Возвращаем поверхностный ресурс
     }
 
-    // Создание события
-    public function store(EventRequest $request) // Используем EventRequest
+    public function store(EventRequest $request)
     {
-        // Валидированные данные уже получены в $request через EventRequest
         $validatedData = $request->validated();
 
-        // Создаём событие
-        $event = Event::create($validatedData);
+        $location = Location::findOrFail($validatedData['location_id']);
+        $preset = Preset::findOrFail($validatedData['preset_id']);
+
+        $event = Event::create([
+            'title' => $validatedData['title'],
+            'description' => $validatedData['description'],
+            'start_time' => $validatedData['start_time'],
+            'end_time' => $validatedData['end_time'],
+            'prize' => $validatedData['prize'],
+            'location_id' => $location->id,
+            'preset_id' => $preset->id,
+        ]);
+
+        $event->load('location', 'preset');
 
         return response()->json(new EventResource($event), 201);
     }

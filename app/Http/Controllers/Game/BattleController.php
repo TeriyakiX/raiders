@@ -137,10 +137,8 @@ class BattleController extends Controller
 
     public function completeBattle(Request $request, $battle_id)
     {
-        // Вызов сервиса для выполнения битвы и получения информации
         $battleResult = $this->battleService->performBattle($battle_id);
 
-        // Проверка на ошибку выполнения битвы
         if (isset($battleResult['error'])) {
             return response()->json([
                 'message' => 'Failed to complete battle.',

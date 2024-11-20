@@ -3,6 +3,8 @@
 namespace App\Http\Resources\EventResource;
 
 use App\Http\Resources\FilterResource;
+use App\Http\Resources\LocationResource;
+use App\Http\Resources\PresetResource;
 use App\Http\Resources\UserResource;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Carbon;
@@ -26,18 +28,14 @@ class EventResource extends JsonResource
             'id' => $this->id,
             'title' => $this->title,
             'description' => $this->description,
-            'start_time' => $this->date_start, // Изменено на date_start
+            'start_time' => $this->start_time,
             'end_time' => $endTime,
             'prize' => $this->prize ?? null,
-            'rarity' => $this->rarity,          // Поля добавлены
-            'gender' => $this->gender,          // Поля добавлены
-            'faction_id' => $this->faction_id,  // Поля добавлены
-            'class' => $this->class,            // Поля добавлены
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
             'time_remaining' => $endTime ? $endTime->diffForHumans() : null,
-            'locationType' => $this->location ? $this->location->type : null,
-            'users' => UserResource::collection($this->whenLoaded('users')),
+            'location' => new LocationResource($this->whenLoaded('location')),
+            'preset' => new PresetResource($this->whenLoaded('preset')),
         ];
     }
 

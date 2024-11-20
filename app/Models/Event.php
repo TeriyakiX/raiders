@@ -10,28 +10,14 @@ class Event extends Model
     use HasFactory;
 
     protected $fillable = [
-        'location_id',
-        'preset_id',
-        'title',
-        'description',
-        'date_start',
-        'date_finish',
-        'prize',
-        'rarity',
-        'gender',
-        'faction_id',
-        'class',
-
-    ];
-
-    protected $casts = [
-        'prize' => 'array',
+        'title', 'description', 'start_time', 'end_time', 'prize', 'location_id', 'preset_id'
     ];
 
     public function location()
     {
         return $this->belongsTo(Location::class);
     }
+
     public function preset()
     {
         return $this->belongsTo(Preset::class);
@@ -39,6 +25,6 @@ class Event extends Model
 
     public function users()
     {
-        return $this->belongsToMany(User::class)->withTimestamps();
+        return $this->belongsToMany(User::class);
     }
 }

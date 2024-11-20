@@ -16,10 +16,10 @@ class PresetResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'title' => $this->title,
+            'name' => $this->name,
             'description' => $this->description,
-            'picture' => $this->picture,
-            'parameters' => $this->parameters,
+            'image' => $this->image,
+            'parameters' => ParameterResource::collection($this->parameters),
         ];
     }
 }

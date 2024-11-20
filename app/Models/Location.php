@@ -13,7 +13,8 @@ class Location extends Model
         'title',
         'address',
         'fractions',
-        'type',
+        'type_id',
+        'faction_id',
         'description',
         'picture',
         'minimap',
@@ -24,8 +25,13 @@ class Location extends Model
         'fractions' => 'array',
     ];
 
-    public function events()
+    public function factions()
     {
-        return $this->hasMany(Event::class);
+        return $this->belongsToMany(Faction::class, 'faction_location');
+    }
+
+    public function type()
+    {
+        return $this->belongsTo(LocationType::class, 'type_id');
     }
 }

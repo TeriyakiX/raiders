@@ -55,11 +55,11 @@ class BattleService
                 ->unique('id')
                 ->filter(function ($card) {
                     return !$card->frozen_until || $card->frozen_until < now();
-                }) // Убираем замороженные карты
+                })
                 ->sortByDesc(function ($card) {
                     return $this->getCardInitiative($card);
                 })
-                ->take(4); // Берем максимум 4 карты
+                ->take(4);
             $defenderSquad = Squad::where('user_id', $defender_id)
                 ->where('event_id', $event_id)
                 ->with('card')
@@ -72,9 +72,8 @@ class BattleService
                 ->sortByDesc(function ($card) {
                     return $this->getCardInitiative($card);
                 })
-                ->take($attackerSquad->count()); // Даем защитнику столько карт, сколько у атакующего
+                ->take($attackerSquad->count());
 
-            // Проверяем, что после фильтрации остались карты для боя
             if ($attackerSquad->isEmpty() || $defenderSquad->isEmpty()) {
                 Log::error('No available cards for battle after filtering frozen cards.', [
                     'attacker_id' => $attacker_id,
@@ -83,7 +82,6 @@ class BattleService
                 throw new Exception("No available cards for one or both users.");
             }
 
-            // Логика определения правил и создания записи боя
             $levelDifference = $attacker->league_id - $defender->league_id;
             $battleRule = BattleRule::where('level_difference', $levelDifference)->first();
             if (!$battleRule) {
@@ -106,7 +104,6 @@ class BattleService
             $defenderWins = 0;
             $battleLog = [];
 
-            // Проходим по доступным картам и проводим раунды
             foreach (range(0, min($attackerSquad->count(), $defenderSquad->count()) - 1) as $i) {
                 $attackerCard = $attackerSquad[$i];
                 $defenderCard = $defenderSquad[$i];
@@ -145,7 +142,6 @@ class BattleService
                 }
             }
 
-            // Подсчет побед и изменение кубков на основе правил из battleRule
             $attackerChange = 0;
             $defenderChange = 0;
 
@@ -157,11 +153,9 @@ class BattleService
                 $attackerChange = $battleRule->attacker_lose_cups;
             }
 
-            // Применяем изменения кубков
             $attacker->increment('cups', $attackerChange);
             $defender->increment('cups', $defenderChange);
 
-            // Завершаем бой
             $battle->update([
                 'attacker_final_cups' => $attacker->cups,
                 'defender_final_cups' => $defender->cups,

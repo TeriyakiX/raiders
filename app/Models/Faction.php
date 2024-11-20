@@ -20,4 +20,9 @@ class Faction extends Model
     {
         return $this->hasMany(Filter::class);
     }
+
+    public function locations()
+    {
+        return $this->belongsToMany(Location::class, 'faction_location');
+    }
 }

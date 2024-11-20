@@ -18,7 +18,12 @@ class LocationResource extends JsonResource
             'id' => $this->id,
             'title' => $this->title,
             'address' => $this->address,
-            'fractions' => $this->fractions,
+            'fractions' => $this->factions->map(function ($fraction) {
+                return [
+                    'id' => $fraction->id,
+                    'name' => $fraction->name,
+                ];
+            }),
             'type' => $this->type,
             'description' => $this->description,
             'picture' => $this->picture,
