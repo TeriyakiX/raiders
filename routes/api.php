@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\BattleRuleController;
 use App\Http\Controllers\Admin\CharacterController;
 use App\Http\Controllers\Admin\EventsController;
 use App\Http\Controllers\Admin\FactionsController;
@@ -12,6 +13,7 @@ use App\Http\Controllers\Game\BattleController;
 use App\Http\Controllers\Game\GameController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\LeagueController;
+use App\Http\Controllers\ParameterController;
 use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -78,6 +80,13 @@ Route::prefix('dao/admin/game')->group(function () {
 
 
 
+    Route::get('/battle-rules', [BattleRuleController::class, 'index']);
+    Route::get('/battle-rules/{id}', [BattleRuleController::class, 'show']);
+    Route::put('/battle-rules/{id}', [BattleRuleController::class, 'update']);
+
+    Route::get('/parameters', [ParameterController::class, 'index']);
+
+
     Route::apiResource('leagues', LeagueController::class);
 
 
@@ -86,6 +95,8 @@ Route::prefix('dao/admin/game')->group(function () {
     Route::get('/battles/{battle_id}', [BattleController::class, 'getBattleStatus']);
     Route::post('/battles/perform/{battle_id}', [BattleController::class, 'completeBattle']);
     Route::get('/battles/{battle_id}/logs', [BattleController::class, 'getBattleLogs']);
+
+
 
     // Замораживание карты
     Route::post('/cards/{card_id}/freeze', [CardController::class, 'freezeCard']);
