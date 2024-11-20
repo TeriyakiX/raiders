@@ -220,17 +220,25 @@ class GameController extends Controller
                 return response()->json(['error' => 'User not found'], 404);
             }
 
+            // Получаем все карты пользователя
             $allUserCards = Card::where('owner', $user->address)->get();
 
             $eventId = $request->query('event_id');
+            $allowedFractions = [];
 
             if ($eventId) {
-                $event = Event::find($eventId);
+                // Загружаем событие вместе с фракциями
+                $event = Event::with('location.factions')->find($eventId);
                 if (!$event) {
                     return response()->json(['error' => 'Event not found'], 404);
                 }
+
+                // Извлекаем имена разрешённых фракций
+                $allowedFractions = $event->location->factions->pluck('name')->toArray();
+                Log::info("Allowed fractions for event ID {$eventId}: ", $allowedFractions);
             }
 
+            // Получаем ID карт в отряде для данного пользователя
             $squadQuery = Squad::where('user_id', $user->id);
             if ($eventId) {
                 $squadQuery->where('event_id', $eventId);
@@ -238,21 +246,33 @@ class GameController extends Controller
             $squadCardIds = $squadQuery->pluck('card_id');
             Log::info("Squad card IDs for event ID {$eventId}: ", $squadCardIds->toArray());
 
+            // Флаг для вывода дополнительной информации
             $showInfo = filter_var($request->query('show_info', false), FILTER_VALIDATE_BOOLEAN);
 
-            $formattedAvailableCards = $allUserCards->map(function ($card) use ($squadCardIds, $showInfo) {
-                $isInSquad = $squadCardIds->contains($card->id);
+            // Фильтруем доступные карты
+            $formattedAvailableCards = $allUserCards->filter(function ($card) use ($squadCardIds, $allowedFractions) {
+                // Получаем клан карты из её метаданных
+                $cardClan = collect($card->metadata['attributes'])
+                    ->firstWhere('trait_type', 'Clan')['value'] ?? null;
 
+                // Проверяем принадлежность к разрешённым фракциям
+                $isValidClan = in_array($cardClan, $allowedFractions);
+
+                // Исключаем карты, которые уже в отряде
+                return $isValidClan && !$squadCardIds->contains($card->id);
+            })->map(function ($card) use ($showInfo) {
+                // Форматируем данные карты
                 $cardData = $card->toArray();
-                $cardData['in_squad'] = $isInSquad;
 
-                return $showInfo ? $cardData : [
-                    'id' => $cardData['id'],
-                    'image' => $cardData['metadata']['image'],
-                    'in_squad' => $cardData['in_squad'],
-                ];
+                return $showInfo
+                    ? $cardData
+                    : [
+                        'id' => $cardData['id'],
+                        'image' => $cardData['metadata']['image'],
+                    ];
             })->values()->toArray();
 
+            // Возвращаем отфильтрованные карты
             return response()->json(['cards' => $formattedAvailableCards]);
 
         } catch (\Exception $e) {

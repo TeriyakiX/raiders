@@ -21,15 +21,13 @@ class LocationController extends Controller
 
     public function store(LocationRequest $request)
     {
-        // Создаем локацию
+
         $location = Location::create($request->validated());
 
-        // Связываем локацию с переданными фракциями
         if ($request->has('fractions')) {
             $location->factions()->sync($request->fractions);
         }
 
-        // Возвращаем ресурс с загруженными фракциями
         return new LocationResource($location->load('factions'));
     }
 

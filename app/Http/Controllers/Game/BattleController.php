@@ -73,14 +73,6 @@ class BattleController extends Controller
                 return response()->json(['message' => 'Defender not found'], 404);
             }
 
-            // Проверка отрядов
-            if ($this->checkSquadSize($attacker->id, $eventId) < 3) {
-                return response()->json(['message' => 'You need at least 3 cards in your squad'], 400);
-            }
-            if ($this->checkSquadSize($defender->id, $eventId) < 3) {
-                return response()->json(['message' => 'The defender needs at least 3 cards'], 400);
-            }
-
             // Запуск битвы
             $battle = $this->battleService->startBattle($attacker->id, $defender->id, $eventId);
 
@@ -102,14 +94,6 @@ class BattleController extends Controller
 
             return response()->json(['message' => 'Failed to start battle.'], 500);
         }
-    }
-    private function checkSquadSize($userId, $eventId)
-    {
-        $squadSize = Squad::where('user_id', $userId)
-            ->where('event_id', $eventId)
-            ->count();
-
-        return $squadSize;
     }
 
 // Проверка замороженных карт
