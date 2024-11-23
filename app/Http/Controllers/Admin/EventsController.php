@@ -23,7 +23,8 @@ class EventsController extends Controller
     }
     public function index()
     {
-        $events = Event::all();
+        $events = Event::with('location', 'preset')->get();
+
         return EventResource::collection($events);
     }
 
@@ -74,8 +75,8 @@ class EventsController extends Controller
     // Получение одного события
     public function show($id)
     {
-        $event = Event::findOrFail($id); // Загружаем событие без фильтров, так как фильтры больше не нужны
-        return new EventResource($event); // Возвращаем полный ресурс
+        $event = Event::with('location', 'preset')->findOrFail($id);
+        return new EventResource($event);
     }
 
 }
