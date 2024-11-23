@@ -1,0 +1,1102 @@
+openapi: 3.0.3
+info:
+  title: Raiders
+  description: 'Документация для Raiders'
+  version: 1.0.0
+servers:
+  -
+    url: 'http://127.0.0.1:8000'
+paths:
+  /api/documentation:
+    get:
+      summary: 'Display Swagger API page.'
+      operationId: displaySwaggerAPIPage
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/documentation could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/documentation could not be found.'
+      tags:
+        - Endpoints
+      security: []
+  /api/oauth2-callback:
+    get:
+      summary: 'Display Oauth2 callback pages.'
+      operationId: displayOauth2CallbackPages
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/oauth2-callback could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/oauth2-callback could not be found.'
+      tags:
+        - Endpoints
+      security: []
+  /api/dao/admin/game/battle-rules:
+    get:
+      summary: ''
+      operationId: getApiDaoAdminGameBattleRules
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/dao/admin/game/battle-rules could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/dao/admin/game/battle-rules could not be found.'
+      tags:
+        - Endpoints
+      security: []
+  '/api/dao/admin/game/battle-rules/{id}':
+    get:
+      summary: ''
+      operationId: getApiDaoAdminGameBattleRulesId
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/dao/admin/game/battle-rules/reprehenderit could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/dao/admin/game/battle-rules/reprehenderit could not be found.'
+      tags:
+        - Endpoints
+      security: []
+    put:
+      summary: ''
+      operationId: putApiDaoAdminGameBattleRulesId
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                level_difference:
+                  type: integer
+                  description: ''
+                  example: 19
+                  nullable: false
+                attacker_win_cups:
+                  type: integer
+                  description: ''
+                  example: 10
+                  nullable: false
+                attacker_lose_cups:
+                  type: integer
+                  description: ''
+                  example: 8
+                  nullable: false
+                victim_win_cups:
+                  type: integer
+                  description: ''
+                  example: 5
+                  nullable: false
+                victim_lose_cups:
+                  type: integer
+                  description: ''
+                  example: 7
+                  nullable: false
+                attacker_frozen_duration:
+                  type: integer
+                  description: ''
+                  example: 2
+                  nullable: false
+                victim_frozen_duration:
+                  type: integer
+                  description: ''
+                  example: 8
+                  nullable: false
+      security: []
+    parameters:
+      -
+        in: path
+        name: id
+        description: 'The ID of the battle rule.'
+        example: reprehenderit
+        required: true
+        schema:
+          type: string
+  /api/dao/admin/game/factions:
+    get:
+      summary: ''
+      operationId: getApiDaoAdminGameFactions
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/dao/admin/game/factions could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/dao/admin/game/factions could not be found.'
+      tags:
+        - Endpoints
+      security: []
+    post:
+      summary: ''
+      operationId: postApiDaoAdminGameFactions
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+      security: []
+  '/api/dao/admin/game/factions/{id}':
+    get:
+      summary: ''
+      operationId: getApiDaoAdminGameFactionsId
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/dao/admin/game/factions/consequatur could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/dao/admin/game/factions/consequatur could not be found.'
+      tags:
+        - Endpoints
+      security: []
+    put:
+      summary: ''
+      operationId: putApiDaoAdminGameFactionsId
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+      security: []
+    delete:
+      summary: ''
+      operationId: deleteApiDaoAdminGameFactionsId
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+      security: []
+    parameters:
+      -
+        in: path
+        name: id
+        description: 'The ID of the faction.'
+        example: consequatur
+        required: true
+        schema:
+          type: string
+  /api/dao/admin/game/locations:
+    get:
+      summary: ''
+      operationId: getApiDaoAdminGameLocations
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/dao/admin/game/locations could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/dao/admin/game/locations could not be found.'
+      tags:
+        - Endpoints
+      security: []
+    post:
+      summary: ''
+      operationId: postApiDaoAdminGameLocations
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  description: 'Must not be greater than 20 characters.'
+                  example: uwxvlfevqwcqdqw
+                  nullable: false
+                address:
+                  type: string
+                  description: ''
+                  example: maiores
+                  nullable: false
+                fractions:
+                  type: array
+                  description: 'The <code>id</code> of an existing record in the factions table.'
+                  example: null
+                  items:
+                    type: string
+                type_id:
+                  type: string
+                  description: 'The <code>id</code> of an existing record in the location_types table.'
+                  example: autem
+                  nullable: false
+                description:
+                  type: string
+                  description: 'Must not be greater than 1000 characters.'
+                  example: 'Neque explicabo aut ut neque deleniti minus numquam.'
+                  nullable: true
+                picture:
+                  type: string
+                  description: ''
+                  example: illo
+                  nullable: true
+                minimap:
+                  type: string
+                  description: ''
+                  example: esse
+                  nullable: true
+              required:
+                - title
+                - address
+                - type_id
+      security: []
+  '/api/dao/admin/game/locations/{id}':
+    get:
+      summary: ''
+      operationId: getApiDaoAdminGameLocationsId
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/dao/admin/game/locations/minus could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/dao/admin/game/locations/minus could not be found.'
+      tags:
+        - Endpoints
+      security: []
+    put:
+      summary: ''
+      operationId: putApiDaoAdminGameLocationsId
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  description: 'Must not be greater than 20 characters.'
+                  example: wqsxcniocxqm
+                  nullable: false
+                address:
+                  type: string
+                  description: ''
+                  example: facere
+                  nullable: false
+                fractions:
+                  type: array
+                  description: 'The <code>id</code> of an existing record in the factions table.'
+                  example: null
+                  items:
+                    type: string
+                type_id:
+                  type: string
+                  description: 'The <code>id</code> of an existing record in the location_types table.'
+                  example: corrupti
+                  nullable: false
+                description:
+                  type: string
+                  description: 'Must not be greater than 1000 characters.'
+                  example: 'Dolor pariatur temporibus quisquam.'
+                  nullable: true
+                picture:
+                  type: string
+                  description: ''
+                  example: nulla
+                  nullable: true
+                minimap:
+                  type: string
+                  description: ''
+                  example: in
+                  nullable: true
+              required:
+                - title
+                - address
+                - type_id
+      security: []
+    delete:
+      summary: ''
+      operationId: deleteApiDaoAdminGameLocationsId
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+      security: []
+    parameters:
+      -
+        in: path
+        name: id
+        description: 'The ID of the location.'
+        example: minus
+        required: true
+        schema:
+          type: string
+  /api/dao/admin/game/presets:
+    get:
+      summary: ''
+      operationId: getApiDaoAdminGamePresets
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/dao/admin/game/presets could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/dao/admin/game/presets could not be found.'
+      tags:
+        - Endpoints
+      security: []
+    post:
+      summary: ''
+      operationId: postApiDaoAdminGamePresets
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: 'Must not be greater than 20 characters.'
+                  example: blrtlvximhacf
+                  nullable: false
+                description:
+                  type: string
+                  description: 'Must not be greater than 1000 characters.'
+                  example: 'Nobis cupiditate blanditiis libero laborum omnis.'
+                  nullable: true
+                image:
+                  type: string
+                  description: 'Must be a valid URL.'
+                  example: 'http://www.jacobi.com/'
+                  nullable: true
+                parameters:
+                  type: array
+                  description: 'The <code>id</code> of an existing record in the parameters table.'
+                  example: null
+                  items:
+                    type: string
+              required:
+                - name
+      security: []
+  '/api/dao/admin/game/presets/{id}':
+    get:
+      summary: ''
+      operationId: getApiDaoAdminGamePresetsId
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/dao/admin/game/presets/quaerat could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/dao/admin/game/presets/quaerat could not be found.'
+      tags:
+        - Endpoints
+      security: []
+    put:
+      summary: ''
+      operationId: putApiDaoAdminGamePresetsId
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: 'Must not be greater than 20 characters.'
+                  example: ylmnqikcmgqh
+                  nullable: false
+                description:
+                  type: string
+                  description: 'Must not be greater than 1000 characters.'
+                  example: 'Culpa molestias maxime hic sint mollitia itaque.'
+                  nullable: true
+                image:
+                  type: string
+                  description: 'Must be a valid URL.'
+                  example: 'http://www.kirlin.com/et-et-reiciendis-placeat-officiis-aut-exercitationem-nisi'
+                  nullable: true
+                parameters:
+                  type: array
+                  description: 'The <code>id</code> of an existing record in the parameters table.'
+                  example: null
+                  items:
+                    type: string
+              required:
+                - name
+      security: []
+    delete:
+      summary: ''
+      operationId: deleteApiDaoAdminGamePresetsId
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+      security: []
+    parameters:
+      -
+        in: path
+        name: id
+        description: 'The ID of the preset.'
+        example: quaerat
+        required: true
+        schema:
+          type: string
+  /api/dao/admin/game/events:
+    get:
+      summary: ''
+      operationId: getApiDaoAdminGameEvents
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/dao/admin/game/events could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/dao/admin/game/events could not be found.'
+      tags:
+        - Endpoints
+      security: []
+    post:
+      summary: ''
+      operationId: postApiDaoAdminGameEvents
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  description: 'Must not be greater than 255 characters.'
+                  example: iphvmxydbuycrxigmcwvnzmio
+                  nullable: false
+                description:
+                  type: string
+                  description: 'Must not be greater than 1000 characters.'
+                  example: 'Sint amet fuga quis occaecati.'
+                  nullable: true
+                location_id:
+                  type: string
+                  description: 'The <code>id</code> of an existing record in the locations table.'
+                  example: aliquid
+                  nullable: false
+                preset_id:
+                  type: string
+                  description: 'The <code>id</code> of an existing record in the presets table.'
+                  example: eos
+                  nullable: false
+                start_time:
+                  type: string
+                  description: 'Must be a valid date in the format <code>Y-m-d H:i:s</code>.'
+                  example: '2024-11-22 15:51:42'
+                  nullable: false
+                end_time:
+                  type: string
+                  description: 'Must be a valid date in the format <code>Y-m-d H:i:s</code>. Must be a date after <code>start_time</code>.'
+                  example: '2083-11-04'
+                  nullable: false
+                prize:
+                  type: string
+                  description: ''
+                  example: culpa
+                  nullable: false
+              required:
+                - title
+                - location_id
+                - preset_id
+                - start_time
+                - end_time
+                - prize
+      security: []
+  '/api/dao/admin/game/events/{id}':
+    get:
+      summary: ''
+      operationId: getApiDaoAdminGameEventsId
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/dao/admin/game/events/fugit could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/dao/admin/game/events/fugit could not be found.'
+      tags:
+        - Endpoints
+      security: []
+    put:
+      summary: ''
+      operationId: putApiDaoAdminGameEventsId
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  description: 'Must not be greater than 255 characters.'
+                  example: pgjihmomuixenufj
+                  nullable: false
+                description:
+                  type: string
+                  description: 'Must not be greater than 1000 characters.'
+                  example: 'Tempora sit vel ea impedit.'
+                  nullable: true
+                location_id:
+                  type: string
+                  description: 'The <code>id</code> of an existing record in the locations table.'
+                  example: est
+                  nullable: false
+                preset_id:
+                  type: string
+                  description: 'The <code>id</code> of an existing record in the presets table.'
+                  example: facere
+                  nullable: false
+                start_time:
+                  type: string
+                  description: 'Must be a valid date in the format <code>Y-m-d H:i:s</code>.'
+                  example: '2024-11-22 15:51:42'
+                  nullable: false
+                end_time:
+                  type: string
+                  description: 'Must be a valid date in the format <code>Y-m-d H:i:s</code>. Must be a date after <code>start_time</code>.'
+                  example: '2122-07-17'
+                  nullable: false
+                prize:
+                  type: string
+                  description: ''
+                  example: doloremque
+                  nullable: false
+              required:
+                - title
+                - location_id
+                - preset_id
+                - start_time
+                - end_time
+                - prize
+      security: []
+    delete:
+      summary: ''
+      operationId: deleteApiDaoAdminGameEventsId
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+      security: []
+    parameters:
+      -
+        in: path
+        name: id
+        description: 'The ID of the event.'
+        example: fugit
+        required: true
+        schema:
+          type: string
+  '/api/dao/admin/game/events/{event_id}/go-to-event':
+    post:
+      summary: 'Запись пользователя на событие по его id.'
+      operationId: Id
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+      security: []
+    parameters:
+      -
+        in: path
+        name: event_id
+        description: 'The ID of the event.'
+        example: 4
+        required: true
+        schema:
+          type: integer
+  /api/dao/admin/game/parameters:
+    get:
+      summary: ''
+      operationId: getApiDaoAdminGameParameters
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/dao/admin/game/parameters could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/dao/admin/game/parameters could not be found.'
+      tags:
+        - Endpoints
+      security: []
+  /api/battles:
+    post:
+      summary: ''
+      operationId: postApiBattles
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+      security: []
+  '/api/battles/{battle_id}':
+    get:
+      summary: ''
+      operationId: getApiBattlesBattle_id
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/battles/perferendis could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/battles/perferendis could not be found.'
+      tags:
+        - Endpoints
+      security: []
+    parameters:
+      -
+        in: path
+        name: battle_id
+        description: 'The ID of the battle.'
+        example: perferendis
+        required: true
+        schema:
+          type: string
+  '/api/battles/perform/{battle_id}':
+    post:
+      summary: ''
+      operationId: postApiBattlesPerformBattle_id
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+      security: []
+    parameters:
+      -
+        in: path
+        name: battle_id
+        description: 'The ID of the battle.'
+        example: quam
+        required: true
+        schema:
+          type: string
+  '/api/battles/{battle_id}/logs':
+    get:
+      summary: ''
+      operationId: getApiBattlesBattle_idLogs
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/battles/placeat/logs could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/battles/placeat/logs could not be found.'
+      tags:
+        - Endpoints
+      security: []
+    parameters:
+      -
+        in: path
+        name: battle_id
+        description: 'The ID of the battle.'
+        example: placeat
+        required: true
+        schema:
+          type: string
+  '/api/cards/{id}':
+    get:
+      summary: ''
+      operationId: getApiCardsId
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/cards/accusamus could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/cards/accusamus could not be found.'
+      tags:
+        - Endpoints
+      security: []
+    parameters:
+      -
+        in: path
+        name: id
+        description: 'The ID of the card.'
+        example: accusamus
+        required: true
+        schema:
+          type: string
+  '/api/cards/{card_id}/freeze':
+    post:
+      summary: ''
+      operationId: postApiCardsCard_idFreeze
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                freeze_duration:
+                  type: integer
+                  description: 'Must be at least 1.'
+                  example: 89
+                  nullable: false
+              required:
+                - freeze_duration
+      security: []
+    parameters:
+      -
+        in: path
+        name: card_id
+        description: 'The ID of the card.'
+        example: quia
+        required: true
+        schema:
+          type: string
+  '/api/cards/{card_id}/unfreeze':
+    post:
+      summary: ''
+      operationId: postApiCardsCard_idUnfreeze
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+      security: []
+    parameters:
+      -
+        in: path
+        name: card_id
+        description: 'The ID of the card.'
+        example: ad
+        required: true
+        schema:
+          type: string
+  '/api/cards/squad/add/{cardId}':
+    post:
+      summary: ''
+      operationId: postApiCardsSquadAddCardId
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+      security: []
+    parameters:
+      -
+        in: path
+        name: cardId
+        description: ''
+        example: quia
+        required: true
+        schema:
+          type: string
+  '/api/cards/squad/remove/{cardId}':
+    delete:
+      summary: ''
+      operationId: deleteApiCardsSquadRemoveCardId
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+      security: []
+    parameters:
+      -
+        in: path
+        name: cardId
+        description: ''
+        example: modi
+        required: true
+        schema:
+          type: string
+  /api/user:
+    get:
+      summary: ''
+      operationId: getApiUser
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/user could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/user could not be found.'
+      tags:
+        - Endpoints
+      security: []
+  /api/user/inventory:
+    get:
+      summary: ''
+      operationId: getApiUserInventory
+      description: ''
+      parameters: []
+      responses:
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'The route api/user/inventory could not be found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'The route api/user/inventory could not be found.'
+      tags:
+        - Endpoints
+      security: []
+  '/api/user/users/{user_id}/update_league_points':
+    patch:
+      summary: ''
+      operationId: patchApiUserUsersUser_idUpdate_league_points
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                league_points:
+                  type: integer
+                  description: ''
+                  example: 6
+                  nullable: false
+              required:
+                - league_points
+      security: []
+    parameters:
+      -
+        in: path
+        name: user_id
+        description: 'The ID of the user.'
+        example: et
+        required: true
+        schema:
+          type: string
+  /api/auth/metamask:
+    post:
+      summary: ''
+      operationId: postApiAuthMetamask
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - Endpoints
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                from:
+                  type: string
+                  description: ''
+                  example: temporibus
+                  nullable: false
+                signature:
+                  type: string
+                  description: ''
+                  example: omnis
+                  nullable: false
+              required:
+                - from
+                - signature
+      security: []
+tags:
+  -
+    name: Endpoints
+    description: ''
+components:
+  securitySchemes:
+    default:
+      type: http
+      scheme: bearer
+      description: 'You can retrieve your token by visiting your dashboard and clicking <b>Generate API token</b>.'
+security:
+  -
+    default: []

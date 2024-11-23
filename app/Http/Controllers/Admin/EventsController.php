@@ -21,11 +21,10 @@ class EventsController extends Controller
     {
         $this->metaMaskAuthService = $metaMaskAuthService;
     }
-    // Получение списка событий
     public function index()
     {
-        $events = Event::all(); // Загружаем события без фильтров, так как они теперь в самих событиях
-        return EventShowResource::collection($events); // Возвращаем поверхностный ресурс
+        $events = Event::all();
+        return EventResource::collection($events);
     }
 
     public function store(EventRequest $request)
