@@ -82,6 +82,9 @@ Route::prefix('dao/admin/game')->group(function () {
     Route::post('/squad/add/{cardId}', [CardController::class, 'addToSquad']);
     Route::delete('/squad/remove/{cardId}', [CardController::class, 'removeFromSquad']);
     Route::get('/events/users/{event}', [GameController::class, 'showEventPage']);
+    Route::get('/card/{eventId}/{cardId}', [CardController::class, 'getCardDetails']);
+    Route::get('/user/{eventId}/{userId}', [CardController::class, 'getUserDetailsByEvent']);
+    Route::get('/user/{userId}', [UserController::class, 'getUserProfile']);
     Route::get('/squad/search', [GameController::class, 'viewAvailableCards']);
 
     Route::get('/battle-rules', [BattleRuleController::class, 'index']);
