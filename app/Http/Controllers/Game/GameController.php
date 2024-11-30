@@ -144,32 +144,24 @@ class GameController extends Controller
             }
 
             $externalId = $userDataResponse['data']['id'];
+            $currentUser = User::with('league')->where('external_id', $externalId)->first();
 
-            $user = User::with('league')->where('external_id', $externalId)->first();
-
-            if (!$user) {
+            if (!$currentUser) {
                 return response()->json(['message' => 'User not found'], 404);
             }
 
-            $userAddress = $user->address;
-
-            if (!$userAddress) {
-                return response()->json(['message' => 'User address not found'], 400);
-            }
-
-            $squadCards = Squad::where('user_id', $user->id)
+            // Состав текущего пользователя
+            $currentUserSquad = Squad::where('user_id', $currentUser->id)
                 ->where('event_id', $event->id)
-                ->get();
+                ->get()
+                ->map(fn($squad) => new CardResourceShow(Card::find($squad->card_id)));
 
-            $eventUsers = $event->users()->with('league')->get();
-
-            $eventUsersWithSquads = $eventUsers->map(function ($eventUser) use ($event) {
+            // Все пользователи события с их составами
+            $eventUsersWithSquads = $event->users()->with('league')->get()->map(function ($eventUser) use ($event) {
                 $userSquad = Squad::where('user_id', $eventUser->id)
                     ->where('event_id', $event->id)
                     ->get()
-                    ->map(function ($squad) {
-                        return new CardResourceShow(Card::find($squad->card_id));
-                    });
+                    ->map(fn($squad) => new CardResourceShow(Card::find($squad->card_id)));
 
                 return [
                     'user' => new UserResource($eventUser),
@@ -177,13 +169,12 @@ class GameController extends Controller
                 ];
             });
 
+            // Формирование итогового ответа
             return response()->json([
                 'event' => new EventResource($event),
-                'user' => new UserResource($user),
-                'squad' => $squadCards->map(function ($squad) {
-                    return new CardResourceShow(Card::find($squad->card_id));
-                }),
-                'event_users' => $eventUsersWithSquads,
+                'user' => new UserResource($currentUser),
+                'squad' => $currentUserSquad,
+                'members' => $eventUsersWithSquads,
             ]);
         } catch (\Exception $e) {
             Log::error("Failed to load the event page: " . $e->getMessage(), [

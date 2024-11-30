@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\CardResource\CardResourceShow;
+use App\Http\Resources\UserResource;
 use App\Models\Card;
 use App\Models\CharacterParameters;
 use App\Models\Squad;
@@ -186,7 +188,50 @@ class CardController extends Controller
 
         return $id;
     }
+    public function getUserDetailsByEvent($eventId, $userId)
+    {
+        try {
+            $user = User::with('league')->find($userId);
 
+            if (!$user) {
+                return response()->json(['message' => 'User not found'], 404);
+            }
+
+            $squad = Squad::where('user_id', $userId)
+                ->where('event_id', $eventId)
+                ->get()
+                ->map(function ($squadItem) {
+                    return new CardResourceShow(Card::find($squadItem->card_id));
+                });
+
+            return response()->json([
+                'user' => new UserResource($user),
+                'squad' => $squad,
+            ]);
+        } catch (\Exception $e) {
+            Log::error("Failed to fetch user details: " . $e->getMessage(), [
+                'exception' => $e,
+                'event_id' => $eventId,
+                'user_id' => $userId,
+            ]);
+
+            return response()->json(['message' => 'Failed to fetch user details.'], 500);
+        }
+    }
+    public function getCardDetails($eventId, $cardId)
+    {
+        $card = Card::find($cardId);
+
+        if (!$card) {
+            return response()->json(['message' => 'Card not found'], 404);
+        }
+
+        $isMember = Squad::where('event_id', $eventId)
+            ->where('card_id', $cardId)
+            ->exists();
+
+        return response()->json(new CardResourceShow($card, $isMember));
+    }
 
 
     public function removeFromSquad(Request $request, $cardId)

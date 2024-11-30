@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\UserResource;
+use App\Models\User;
 use App\Services\UserService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
@@ -15,7 +17,16 @@ class UserController extends Controller
     {
         $this->userService = $userService;
     }
+    public function getUserProfile($userId)
+    {
+        $user = User::with('league')->find($userId);
 
+        if (!$user) {
+            return response()->json(['message' => 'User not found'], 404);
+        }
+
+        return response()->json(new UserResource($user));
+    }
     public function getUserData(Request $request)
     {
         $accessToken = $request->cookie('access_token');
