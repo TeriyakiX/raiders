@@ -170,7 +170,6 @@ class GameController extends Controller
 
                 return [
                     'user_id' => $eventUser->id,  // Возвращаем только ID пользователя
-                    'squad' => $userSquad,
                 ];
             });
 
