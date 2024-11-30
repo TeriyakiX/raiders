@@ -205,7 +205,6 @@ class CardController extends Controller
                 });
 
             return response()->json([
-                'user' => new UserResource($user),
                 'squad' => $squad,
             ]);
         } catch (\Exception $e) {

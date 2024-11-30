@@ -132,11 +132,16 @@ class GameController extends Controller
         try {
             $accessToken = $request->cookie('access_token');
 
+            // Логируем accessToken
+            Log::info('Access token:', ['access_token' => $accessToken]);
+
             if (!$accessToken) {
                 return response()->json(['message' => 'Unauthorized'], 401);
             }
 
             $userDataResponse = $this->userService->getUserData($accessToken);
+
+            // Логируем полный ответ от getUserData
             Log::info('User data response:', ['response' => $userDataResponse]);
 
             if (!isset($userDataResponse['data']['id'])) {
@@ -161,10 +166,10 @@ class GameController extends Controller
                 $userSquad = Squad::where('user_id', $eventUser->id)
                     ->where('event_id', $event->id)
                     ->get()
-                    ->map(fn($squad) => new CardResourceShow(Card::find($squad->card_id)));
+                    ->map(fn($squad) => $squad->card_id); // Возвращаем только ID карточки
 
                 return [
-                    'user' => new UserResource($eventUser),
+                    'user_id' => $eventUser->id,  // Возвращаем только ID пользователя
                     'squad' => $userSquad,
                 ];
             });
