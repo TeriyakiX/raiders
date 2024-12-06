@@ -110,11 +110,3 @@ Route::prefix('dao/admin/game')->group(function () {
 Route::get('/user', [UserController::class, 'getUserData']);
 Route::post('auth/metamask', [MetaMaskController::class, 'loginWithMetaMask']);
 Route::get('/user/inventory', [InventoryController::class, 'getUserInventory']);
-
-Route::options('{any}', function (Request $request) {
-    return response('', 200)
-        ->header('Access-Control-Allow-Origin', $request->header('Origin'))
-        ->header('Access-Control-Allow-Methods', 'POST, GET, OPTIONS, PUT, DELETE')
-        ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
-        ->header('Access-Control-Allow-Credentials', 'true');
-})->where('any', '.*');
