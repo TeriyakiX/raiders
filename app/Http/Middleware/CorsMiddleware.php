@@ -8,12 +8,8 @@ class CorsMiddleware
 {
     public function handle($request, Closure $next)
     {
+        // Не устанавливаем заголовки CORS временно
         $response = $next($request);
-
-        $response->headers->set('Access-Control-Allow-Origin', 'https://raiders-front.ru');
-        $response->headers->set('Access-Control-Allow-Methods', 'POST, GET, OPTIONS, PUT, DELETE');
-        $response->headers->set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-        $response->headers->set('Access-Control-Allow-Credentials', 'true');
 
         return $response;
     }
