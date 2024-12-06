@@ -17,7 +17,10 @@ return [
 
     'paths' => ['api/*'],
     'allowed_methods' => ['*'],
-    'allowed_origins' => ['https://raiders-front.ru'],
+    'allowed_origins' => [
+        'http://localhost:3000',
+        'https://raiders-front.ru',
+    ],
     'allowed_origins_patterns' => [],
     'allowed_headers' => ['*'],
     'exposed_headers' => [],
