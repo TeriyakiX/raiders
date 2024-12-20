@@ -61,7 +61,6 @@ class GameController extends Controller
             // Начинаем транзакцию
             DB::beginTransaction();
 
-            // Попытка записать пользователя на событие
             try {
                 $event->users()->attach($user->id);
 
@@ -71,18 +70,15 @@ class GameController extends Controller
                     return response()->json(['message' => 'No cards provided or invalid format'], 400);
                 }
 
-                // Добавление карточек в отряд
                 foreach ($cards as $cardIdentifier) {
                     $this->addCardToSquad($user, $event, $cardIdentifier);
                 }
 
-                // Если все прошло успешно, сохраняем изменения
                 DB::commit();
 
                 $event->load('users');
                 return new EventResource($event);
             } catch (\Exception $e) {
-                // Если произошла ошибка при добавлении карт или других операций, откатываем транзакцию
                 DB::rollBack();
 
                 // Логируем ошибку
@@ -125,6 +121,10 @@ class GameController extends Controller
             'user_id' => $user->id,
             'event_id' => $event->id,
         ]);
+
+
+        $user->refresh();
+        $event->fresh();
     }
 
     public function showEventPage(Request $request, Event $event)
@@ -132,7 +132,6 @@ class GameController extends Controller
         try {
             $accessToken = $request->cookie('access_token');
 
-            // Логируем accessToken
             Log::info('Access token:', ['access_token' => $accessToken]);
 
             if (!$accessToken) {
@@ -141,7 +140,6 @@ class GameController extends Controller
 
             $userDataResponse = $this->userService->getUserData($accessToken);
 
-            // Логируем полный ответ от getUserData
             Log::info('User data response:', ['response' => $userDataResponse]);
 
             if (!isset($userDataResponse['data']['id'])) {
@@ -155,25 +153,22 @@ class GameController extends Controller
                 return response()->json(['message' => 'User not found'], 404);
             }
 
-            // Состав текущего пользователя
             $currentUserSquad = Squad::where('user_id', $currentUser->id)
                 ->where('event_id', $event->id)
                 ->get()
                 ->map(fn($squad) => new CardResourceShow(Card::find($squad->card_id)));
 
-            // Все пользователи события с их составами
             $eventUsersWithSquads = $event->users()->with('league')->get()->map(function ($eventUser) use ($event) {
                 $userSquad = Squad::where('user_id', $eventUser->id)
                     ->where('event_id', $event->id)
                     ->get()
-                    ->map(fn($squad) => $squad->card_id); // Возвращаем только ID карточки
+                    ->map(fn($squad) => $squad->card_id);
 
                 return [
-                    'user_id' => $eventUser->id,  // Возвращаем только ID пользователя
+                    'user_id' => $eventUser->id,
                 ];
             });
 
-            // Формирование итогового ответа
             return response()->json([
                 'event' => new EventResource($event),
                 'user' => new UserResource($currentUser),
@@ -215,25 +210,21 @@ class GameController extends Controller
                 return response()->json(['error' => 'User not found'], 404);
             }
 
-            // Получаем все карты пользователя
             $allUserCards = Card::where('owner', $user->address)->get();
 
             $eventId = $request->query('event_id');
             $allowedFractions = [];
 
             if ($eventId) {
-                // Загружаем событие вместе с фракциями
                 $event = Event::with('location.factions')->find($eventId);
                 if (!$event) {
                     return response()->json(['error' => 'Event not found'], 404);
                 }
 
-                // Извлекаем имена разрешённых фракций
                 $allowedFractions = $event->location->factions->pluck('name')->toArray();
                 Log::info("Allowed fractions for event ID {$eventId}: ", $allowedFractions);
             }
 
-            // Получаем ID карт в отряде для данного пользователя
             $squadQuery = Squad::where('user_id', $user->id);
             if ($eventId) {
                 $squadQuery->where('event_id', $eventId);
@@ -241,22 +232,16 @@ class GameController extends Controller
             $squadCardIds = $squadQuery->pluck('card_id');
             Log::info("Squad card IDs for event ID {$eventId}: ", $squadCardIds->toArray());
 
-            // Флаг для вывода дополнительной информации
             $showInfo = filter_var($request->query('show_info', false), FILTER_VALIDATE_BOOLEAN);
 
-            // Фильтруем доступные карты
             $formattedAvailableCards = $allUserCards->filter(function ($card) use ($squadCardIds, $allowedFractions) {
-                // Получаем клан карты из её метаданных
                 $cardClan = collect($card->metadata['attributes'])
                     ->firstWhere('trait_type', 'Clan')['value'] ?? null;
 
-                // Проверяем принадлежность к разрешённым фракциям
                 $isValidClan = in_array($cardClan, $allowedFractions);
 
-                // Исключаем карты, которые уже в отряде
                 return $isValidClan && !$squadCardIds->contains($card->id);
             })->map(function ($card) use ($showInfo) {
-                // Форматируем данные карты
                 $cardData = $card->toArray();
 
                 return $showInfo
@@ -267,7 +252,6 @@ class GameController extends Controller
                     ];
             })->values()->toArray();
 
-            // Возвращаем отфильтрованные карты
             return response()->json(['cards' => $formattedAvailableCards]);
 
         } catch (\Exception $e) {

@@ -70,20 +70,16 @@ class BattleService
                     return !$card->frozen_until || $card->frozen_until < now();
                 });
 
-            // Ограничиваем количество карт до минимального из карт атакующего и защитника
             $attackerSquadCount = $attackerSquad->count();
             $defenderSquadCount = $defenderSquad->count();
             $cardsToUse = min($attackerSquadCount, $defenderSquadCount);
 
-            // Если у атакующего карт меньше, чем у защитника, то выбираем только карты атакующего
-            // и наоборот, если у защитника карт меньше, то выбираем только карты защитника
             if ($attackerSquadCount < $defenderSquadCount) {
-                $defenderSquad = $defenderSquad->take($attackerSquadCount); // ограничиваем количество карт у защитника
+                $defenderSquad = $defenderSquad->take($attackerSquadCount);
             } elseif ($defenderSquadCount < $attackerSquadCount) {
-                $attackerSquad = $attackerSquad->take($defenderSquadCount); // ограничиваем количество карт у атакующего
+                $attackerSquad = $attackerSquad->take($defenderSquadCount);
             }
 
-            // После обрезки коллекций снова определяем минимальное количество карт
             $cardsToUse = min($attackerSquad->count(), $defenderSquad->count());
 
             if ($attackerSquad->isEmpty() || $defenderSquad->isEmpty()) {
@@ -223,7 +219,6 @@ class BattleService
             ];
         });
 
-        // Подсчет времени заморозки для атакующего и защищающегося
         $attackerFrozenUntil = optional($battle->attacker)->frozen_until;
         $defenderFrozenUntil = optional($battle->defender)->frozen_until;
 

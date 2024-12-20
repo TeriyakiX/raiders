@@ -36,7 +36,6 @@ class BattleController extends Controller
                 return response()->json(['message' => 'Unauthorized'], 401);
             }
 
-            // Получение данных пользователя
             $userDataResponse = $this->userService->getUserData($accessToken);
             Log::info('User data fetched: ' . json_encode($userDataResponse));
 
@@ -53,7 +52,6 @@ class BattleController extends Controller
                 return response()->json(['message' => 'User not found'], 404);
             }
 
-            // Логирование данных атакующего и защитника
             $eventId = $request->input('event_id');
             $defenderId = $request->input('defender_id');
 
@@ -73,7 +71,6 @@ class BattleController extends Controller
                 return response()->json(['message' => 'Defender not found'], 404);
             }
 
-            // Запуск битвы
             $battle = $this->battleService->startBattle($attacker->id, $defender->id, $eventId);
 
             if ($battle && isset($battle->id)) {
