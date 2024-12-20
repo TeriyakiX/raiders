@@ -117,22 +117,22 @@ class MetaMaskController extends Controller
 
         foreach ($data['data'] as $cardData) {
             $metadata = [
-                'image' => $cardData['metadata']['image'],
+                'image' => $cardData['metadata']['image'] ?? null,
                 'tokenId' => $cardData['id'],
-                'name' => $cardData['metadata']['name'],
-                'description' => $cardData['metadata']['description'],
-                'attributes' => $cardData['metadata']['attributes']
+                'name' => $cardData['metadata']['name'] ?? null,
+                'description' => $cardData['metadata']['description'] ?? null,
+                'attributes' => $cardData['metadata']['attributes'] ?? []
             ];
-
+            
             $existingCard = Card::where('card_id', $cardData['id'])->first();
 
             if (!$existingCard) {
                 Card::create([
                     'contract' => $cardData['contract'],
+                    'card_id' => $cardData['id'],
                     'owner' => $owner,
                     'balance' => $cardData['balance'],
                     'metadata' => $metadata,
-                    'card_id' => $cardData['id'],
                 ]);
             } else {
                 $existingCard->update([
