@@ -115,7 +115,27 @@ class MetaMaskController extends Controller
             throw new \Exception('Error fetching user cards: ' . $data['error']);
         }
 
+        $apiCardIds = collect($data['data'])->pluck('id')->toArray(); // Собираем все id карт из API
+
+        // Удаляем из базы карты, которых больше нет в API
+        Card::where('owner', $owner)->whereNotIn('card_id', $apiCardIds)->delete();
+
         foreach ($data['data'] as $cardData) {
+            // Проверка наличия "village" или "town" в metadata->attributes
+            $isVillageOrTown = false;
+            foreach ($cardData['metadata']['attributes'] as $attribute) {
+                if (strtolower($attribute['trait_type']) === 'density' &&
+                    (strtolower($attribute['value']) === 'village' || strtolower($attribute['value']) === 'town')) {
+                    $isVillageOrTown = true;
+                    break; // Прерываем цикл, если нашли 'village' или 'town'
+                }
+            }
+
+            // Если карта является "village" или "town", пропускаем её
+            if ($isVillageOrTown) {
+                continue; // Пропускаем текущую итерацию цикла
+            }
+
             $metadata = [
                 'image' => $cardData['metadata']['image'] ?? null,
                 'tokenId' => $cardData['id'],
@@ -123,10 +143,12 @@ class MetaMaskController extends Controller
                 'description' => $cardData['metadata']['description'] ?? null,
                 'attributes' => $cardData['metadata']['attributes'] ?? []
             ];
-            
+
+            // Проверяем существование карты по id
             $existingCard = Card::where('card_id', $cardData['id'])->first();
 
             if (!$existingCard) {
+                // Создаем новую карту, если её нет
                 Card::create([
                     'contract' => $cardData['contract'],
                     'card_id' => $cardData['id'],
@@ -135,6 +157,7 @@ class MetaMaskController extends Controller
                     'metadata' => $metadata,
                 ]);
             } else {
+                // Обновляем карту, если она уже существует
                 $existingCard->update([
                     'contract' => $cardData['contract'],
                     'owner' => $owner,

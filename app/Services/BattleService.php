@@ -58,8 +58,8 @@ class BattleService
                 })
                 ->sortByDesc(function ($card) {
                     return $this->getCardInitiative($card);
-                })
-                ->take(4);
+                });
+
             $defenderSquad = Squad::where('user_id', $defender_id)
                 ->where('event_id', $event_id)
                 ->with('card')
@@ -68,11 +68,23 @@ class BattleService
                 ->unique('id')
                 ->filter(function ($card) {
                     return !$card->frozen_until || $card->frozen_until < now();
-                }) // Убираем замороженные карты
-                ->sortByDesc(function ($card) {
-                    return $this->getCardInitiative($card);
-                })
-                ->take($attackerSquad->count());
+                });
+
+            // Ограничиваем количество карт до минимального из карт атакующего и защитника
+            $attackerSquadCount = $attackerSquad->count();
+            $defenderSquadCount = $defenderSquad->count();
+            $cardsToUse = min($attackerSquadCount, $defenderSquadCount);
+
+            // Если у атакующего карт меньше, чем у защитника, то выбираем только карты атакующего
+            // и наоборот, если у защитника карт меньше, то выбираем только карты защитника
+            if ($attackerSquadCount < $defenderSquadCount) {
+                $defenderSquad = $defenderSquad->take($attackerSquadCount); // ограничиваем количество карт у защитника
+            } elseif ($defenderSquadCount < $attackerSquadCount) {
+                $attackerSquad = $attackerSquad->take($defenderSquadCount); // ограничиваем количество карт у атакующего
+            }
+
+            // После обрезки коллекций снова определяем минимальное количество карт
+            $cardsToUse = min($attackerSquad->count(), $defenderSquad->count());
 
             if ($attackerSquad->isEmpty() || $defenderSquad->isEmpty()) {
                 Log::error('No available cards for battle after filtering frozen cards.', [
@@ -104,7 +116,7 @@ class BattleService
             $defenderWins = 0;
             $battleLog = [];
 
-            foreach (range(0, min($attackerSquad->count(), $defenderSquad->count()) - 1) as $i) {
+            foreach (range(0, $cardsToUse - 1) as $i) {
                 $attackerCard = $attackerSquad[$i];
                 $defenderCard = $defenderSquad[$i];
 
