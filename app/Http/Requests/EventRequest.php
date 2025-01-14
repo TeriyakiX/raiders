@@ -21,6 +21,8 @@ class EventRequest extends FormRequest
             'start_time' => 'required|date_format:Y-m-d H:i:s',
             'end_time' => 'required|date_format:Y-m-d H:i:s|after:start_time',
             'prize' => 'required|string',
+            'filter_ids' => 'nullable|array',
+            'filter_ids.*' => 'exists:filters,id',
         ];
     }
 }

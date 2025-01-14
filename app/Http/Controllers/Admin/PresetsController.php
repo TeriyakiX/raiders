@@ -14,7 +14,7 @@ class PresetsController extends Controller
     public function index()
     {
         $presets = Preset::all();
-        return response()->json($presets);
+        return PresetResource::collection($presets);
     }
 
     public function store(PresetRequest $request)

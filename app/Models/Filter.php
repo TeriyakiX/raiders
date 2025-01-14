@@ -9,17 +9,11 @@ class Filter extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
-        'event_id',
-        'rarity',
-        'gender',
-        'faction_id',
-        'class',
-    ];
+    protected $fillable = ['type', 'value'];
 
     public function events()
     {
-        return $this->belongsToMany(Event::class, 'event_filter');
+        return $this->belongsToMany(Event::class, 'event_filters');
     }
 
     public function faction()

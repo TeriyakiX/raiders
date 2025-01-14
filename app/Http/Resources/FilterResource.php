@@ -16,10 +16,8 @@ class FilterResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'rarity' => $this->rarity,
-            'gender' => $this->gender,
-            'faction' => new FactionResource($this->whenLoaded('faction')), // Подгружаем фракцию
-            'class' => $this->class,
+            'type' => $this->type,
+            'value' => $this->value,
         ];
     }
 }

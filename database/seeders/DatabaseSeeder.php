@@ -16,5 +16,6 @@ class DatabaseSeeder extends Seeder
         $this->call(FactionsTableSeeder::class);
         $this->call(LandsTableSeeder::class);
         $this->call(FactionLandInteractionsTableSeeder::class);
+        $this->call(FilterSeeder::class);
     }
 }

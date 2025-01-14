@@ -23,7 +23,7 @@ class EventsController extends Controller
     }
     public function index()
     {
-        $events = Event::with('location', 'preset')->get();
+        $events = Event::with('location', 'preset','filters')->get();
 
         return EventResource::collection($events);
     }
@@ -35,6 +35,7 @@ class EventsController extends Controller
         $location = Location::findOrFail($validatedData['location_id']);
         $preset = Preset::findOrFail($validatedData['preset_id']);
 
+        // Создание события
         $event = Event::create([
             'title' => $validatedData['title'],
             'description' => $validatedData['description'],
@@ -45,7 +46,11 @@ class EventsController extends Controller
             'preset_id' => $preset->id,
         ]);
 
-        $event->load('location', 'preset');
+        if (!empty($validatedData['filter_ids'])) {
+            $event->filters()->sync($validatedData['filter_ids']);
+        }
+
+        $event->load('location', 'preset', 'filters');
 
         return response()->json(new EventResource($event), 201);
     }
@@ -56,11 +61,18 @@ class EventsController extends Controller
         $event = Event::findOrFail($id);
 
         $validated = $request->validated();
-        Log::info('Validated data:', $validated); // Логируем валидированные данные
 
         $event->update($validated);
 
-        return new EventResource($event); // Возвращаем обновленный ресурс
+        if (!empty($validated['filter_ids'])) {
+            $event->filters()->sync($validated['filter_ids']);
+        } else {
+            $event->filters()->detach();
+        }
+
+        $event->load('filters');
+
+        return new EventResource($event);
     }
 
     // Удаление события
@@ -75,7 +87,7 @@ class EventsController extends Controller
     // Получение одного события
     public function show($id)
     {
-        $event = Event::with('location', 'preset')->findOrFail($id);
+        $event = Event::with('location', 'preset', 'filters')->findOrFail($id);
         return new EventResource($event);
     }
 

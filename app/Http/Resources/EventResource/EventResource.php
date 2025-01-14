@@ -36,6 +36,7 @@ class EventResource extends JsonResource
             'time_remaining' => $endTime ? $endTime->diffForHumans() : null,
             'location' => new LocationResource($this->whenLoaded('location')),
             'preset' => new PresetResource($this->whenLoaded('preset')),
+            'filters' => FilterResource::collection($this->whenLoaded('filters')),
         ];
     }
 

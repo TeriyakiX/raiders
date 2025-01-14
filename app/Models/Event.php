@@ -27,4 +27,8 @@ class Event extends Model
     {
         return $this->belongsToMany(User::class);
     }
+    public function filters()
+    {
+        return $this->belongsToMany(Filter::class, 'event_filters');
+    }
 }
