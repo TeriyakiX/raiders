@@ -55,7 +55,6 @@ class EventsController extends Controller
         return response()->json(new EventResource($event), 201);
     }
 
-    // Обновление события
     public function update(EventRequest $request, $id)
     {
         $event = Event::findOrFail($id);
