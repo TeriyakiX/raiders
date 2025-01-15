@@ -35,7 +35,7 @@ class PresetsController extends Controller
     public function show($id)
     {
         $preset = Preset::findOrFail($id);
-        return response()->json($preset);
+        return new PresetResource($preset);
     }
 
     public function update(PresetRequest $request, $id)
